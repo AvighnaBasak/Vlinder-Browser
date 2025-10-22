@@ -48,6 +48,36 @@ window.addEventListener('DOMContentLoaded', () => {
     // Initialize browser context (history, downloads, bookmarks, etc.)
     initBrowserContext()
 
+    // Initialize tabs manager
+    const { Tabs } = require('../tabs.js')
+    const tabContainer = document.getElementById('tab-container')
+
+    if (tabContainer) {
+      window.tabsManager = new Tabs(tabContainer)
+      console.log('[NW.js Init] Tabs manager created')
+
+      // Connect tabs manager to chrome API shim
+      if (window.setTabsManager) {
+        window.setTabsManager(window.tabsManager)
+        console.log('[NW.js Init] Tabs manager connected to chrome API shim')
+      }
+
+      // Set up tab event listeners for UI updates
+      window.tabsManager.on('tab-created', (tab) => {
+        console.log('[NW.js Init] Tab created:', tab.id)
+      })
+
+      window.tabsManager.on('tab-selected', (tab) => {
+        console.log('[NW.js Init] Tab selected:', tab.id)
+      })
+
+      window.tabsManager.on('tab-destroyed', (tab) => {
+        console.log('[NW.js Init] Tab destroyed:', tab.id)
+      })
+    } else {
+      console.error('[NW.js Init] Tab container not found!')
+    }
+
     // Expose global state for AI panel communication
     window.__aiPanelOpen = false
     window.__setAIPanelWidth = (width) => {
