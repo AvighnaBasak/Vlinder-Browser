@@ -3,7 +3,7 @@
   "productName": "Shell",
   "version": "2.2.0",
   "description": "Minimum Viable Browser shell built on NW.js with full Chromium compatibility.",
-  "main": "browser/ui/webui.html",
+  "main": "browser/ui/index.html",
   "window": {
     "title": "Shell Browser",
     "width": 1280,
@@ -16,7 +16,7 @@
     "show": true,
     "position": "center"
   },
-  "chromium-args": "--enable-extensions --ignore-certificate-errors --allow-file-access-from-files --disable-web-security --enable-experimental-web-platform-features --enable-features=NativeFileSystemAPI,FileHandlingAPI --disable-features=CrossOriginOpenerPolicy",
+  "chromium-args": "--enable-extensions --load-extension=browser/ui --ignore-certificate-errors --allow-file-access-from-files --disable-web-security --enable-experimental-web-platform-features --enable-features=NativeFileSystemAPI,FileHandlingAPI --disable-features=CrossOriginOpenerPolicy",
   "node-remote": "<all_urls>",
   "webkit": {
     "plugin": true

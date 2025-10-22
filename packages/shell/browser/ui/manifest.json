@@ -5,10 +5,14 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": [],
+  "permissions": ["tabs", "webRequest", "webRequestBlocking", "downloads", "storage", "<all_urls>"],
+  "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
     {
       "resources": [
+        "webui.html",
+        "webui.js",
+        "webui-main.js",
         "history.html",
         "history.js",
         "history-data.json",
@@ -29,7 +33,12 @@
         "theme-loader.js",
         "current-theme.json",
         "background-settings.json",
-        "backgrounds/*"
+        "ai-chat.js",
+        "ai-chat.css",
+        "backgrounds/*",
+        "*.png",
+        "*.jpg",
+        "*.webp"
       ],
       "matches": ["<all_urls>"]
     }
