@@ -40,3 +40,7 @@ Thumbs.db
 # Misc
 disabled/
 noncompliant.txt
+
+# NW.js user data
+nwjs-data/
+packages/shell/nwjs-data/

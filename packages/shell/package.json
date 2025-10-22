@@ -16,7 +16,7 @@
     "show": true,
     "position": "center"
   },
-  "chromium-args": "--ignore-certificate-errors --allow-file-access-from-files --disable-web-security --enable-experimental-web-platform-features --enable-features=NativeFileSystemAPI,FileHandlingAPI --disable-features=CrossOriginOpenerPolicy",
+  "chromium-args": "--disable-extensions-auto-update --ignore-certificate-errors --allow-file-access-from-files --disable-web-security --enable-experimental-web-platform-features --enable-features=NativeFileSystemAPI,FileHandlingAPI --disable-features=CrossOriginOpenerPolicy --user-data-dir=./nwjs-data",
   "node-remote": "<all_urls>",
   "webkit": {
     "plugin": true
