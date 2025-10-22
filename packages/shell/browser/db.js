@@ -1,9 +1,23 @@
 const fs = require('fs')
 const path = require('path')
-const { app } = require('electron')
 
-const historyPath = path.join(app.getPath('userData'), 'history.json')
-const bookmarksPath = path.join(app.getPath('userData'), 'bookmarks.json')
+// NW.js: Use nw.App.dataPath instead of app.getPath('userData')
+const getUserDataPath = () => {
+  if (typeof nw !== 'undefined' && nw.App && nw.App.dataPath) {
+    return nw.App.dataPath
+  }
+  // Fallback for development
+  return path.join(__dirname, '../data')
+}
+
+const historyPath = path.join(getUserDataPath(), 'history.json')
+const bookmarksPath = path.join(getUserDataPath(), 'bookmarks.json')
+
+// Ensure data directory exists
+const dataDir = getUserDataPath()
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true })
+}
 
 class HistoryDB {
   constructor() {
