@@ -167,37 +167,26 @@ class WebUI {
     })
 
     // Subscribe to download updates to drive toolbar animations/badge
-    if (window.electronAPI && typeof window.electronAPI.on === 'function') {
-      this._downloadingCount = 0
-      window.electronAPI.on('download-updated', (payload) => {
-        try {
-          // Use the payload to update count without roundtrip
-          if (payload.state === 'downloading' || payload.state === 'paused') {
-            this._downloadingCount = Math.max(1, this._downloadingCount)
+    // NW.js: Download updates will be handled via chrome.downloads API
+    // TODO: Implement download badge updates using chrome.downloads.onChanged
+    this._downloadingCount = 0
+
+    // Placeholder for NW.js download tracking
+    if (typeof chrome !== 'undefined' && chrome.downloads) {
+      try {
+        chrome.downloads.onChanged.addListener((delta) => {
+          // Update badge when download state changes
+          if (delta.state) {
+            chrome.downloads.search({}, (downloads) => {
+              const active = downloads.filter((d) => d.state === 'in_progress').length
+              this._downloadingCount = active
+              this.updateDownloadsBadge(active, delta.state.current === 'complete')
+            })
           }
-          if (payload.state === 'complete' || payload.state === 'cancelled') {
-            // Recompute count cheaply from payload hint by requesting list less frequently
-            setTimeout(() => {
-              window.electronAPI
-                .invoke('get-downloads')
-                .then((list) => {
-                  const active = (Array.isArray(list) ? list : []).filter(
-                    (d) => d.state === 'downloading' || d.state === 'paused',
-                  ).length
-                  this._downloadingCount = active
-                  this.updateDownloadsBadge(active, payload.state === 'complete')
-                })
-                .catch(() => {})
-            }, 50)
-            return
-          }
-          this.updateDownloadsBadge(this._downloadingCount, false)
-          if (payload.state === 'complete') {
-            this.$.downloadsButton.classList.add('download-complete')
-            setTimeout(() => this.$.downloadsButton.classList.remove('download-complete'), 900)
-          }
-        } catch {}
-      })
+        })
+      } catch (err) {
+        console.log('[WebUI] Chrome downloads API not available:', err)
+      }
     }
 
     this.updateDownloadsBadge = (active, flash) => {
@@ -222,20 +211,14 @@ class WebUI {
 
     this.initTabs()
 
-    if (window.require) {
+    // NW.js: Direct event handling, no IPC needed
+    // Focus address bar when requested (e.g., via Ctrl+L shortcut)
+    window.addEventListener('focus-address-bar', () => {
       try {
-        const { ipcRenderer } = window.require('electron')
-        // Focus address bar when main requests
-        if (window.electronAPI && typeof window.electronAPI.on === 'function') {
-          window.electronAPI.on('focus-address-bar', () => {
-            try {
-              this.$.addressUrl?.focus()
-              this.$.addressUrl?.select()
-            } catch {}
-          })
-        }
-      } catch (e) {}
-    }
+        this.$.addressUrl?.focus()
+        this.$.addressUrl?.select()
+      } catch {}
+    })
 
     // Immediately focus the address bar on new tab load
     this.focusAddressBarSoon()

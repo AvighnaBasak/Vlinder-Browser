@@ -10,19 +10,10 @@
     "packages/electron-chrome-web-store"
   ],
   "scripts": {
-    "build": "yarn run build:context-menu && yarn run build:chrome-web-store && yarn run build:extensions && yarn run build:shell",
-    "build:chrome-web-store": "yarn --cwd ./packages/electron-chrome-web-store build",
-    "build:context-menu": "yarn --cwd ./packages/electron-chrome-context-menu build",
-    "build:extensions": "yarn --cwd ./packages/electron-chrome-extensions build",
-    "build:shell": "yarn --cwd ./packages/shell build",
-    "start": "yarn build:context-menu && yarn build:extensions && yarn build:chrome-web-store && yarn --cwd ./packages/shell start",
-    "start:debug": "cross-env DEBUG='electron*' yarn start",
-    "start:electron-dev": "cross-env ELECTRON_OVERRIDE_DIST_PATH=$(e show out --path) ELECTRON_ENABLE_LOGGING=1 yarn start",
-    "start:electron-dev:debug": "cross-env DEBUG='electron*' yarn start:electron-dev",
-    "start:electron-dev:trace": "cross-env ELECTRON_OVERRIDE_DIST_PATH=$(e show out --path) ELECTRON_ENABLE_LOGGING=1 yarn --cwd ./packages/shell start:trace",
-    "start:skip-build": "cross-env SHELL_DEBUG=true DEBUG='electron-chrome-extensions*' yarn --cwd ./packages/shell start",
-    "test": "yarn test:extensions",
-    "test:extensions": "yarn --cwd ./packages/electron-chrome-extensions test",
+    "start": "cd packages/shell && nw .",
+    "start:debug": "cd packages/shell && nw . --enable-logging",
+    "build": "echo 'NW.js build - TBD'",
+    "test": "echo 'Tests - TBD'",
     "prepare": "husky",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css}\"",
     "generate-noncompliant": "cat noncompliant.txt | awk '{print tolower($0)}' | xargs -I {} node ./scripts/generate-hash.js {}"

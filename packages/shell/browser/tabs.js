@@ -1,29 +1,58 @@
 const { EventEmitter } = require('events')
-const { WebContentsView } = require('electron')
 
 const toolbarHeight = 64
 
+const CHROME_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
 class Tab {
-  constructor(parentWindow, wcvOpts = {}) {
+  constructor(parentContainer, options = {}) {
     this.invalidateLayout = this.invalidateLayout.bind(this)
     this.extraTop = 0
     this.aiPanelWidth = 0
+    this.destroyed = false
 
-    // Delete undefined properties which cause WebContentsView constructor to
-    // throw. This should probably be fixed in Electron upstream.
-    if (wcvOpts.hasOwnProperty('webContents') && !wcvOpts.webContents) delete wcvOpts.webContents
-    if (wcvOpts.hasOwnProperty('webPreferences') && !wcvOpts.webPreferences)
-      delete wcvOpts.webPreferences
+    // Create iframe element
+    this.iframe = document.createElement('iframe')
+    this.id = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    this.iframe.id = this.iframe_id = this.id
 
-    this.view = new WebContentsView(wcvOpts)
-    this.id = this.view.webContents.id
-    this.window = parentWindow
-    this.webContents = this.view.webContents
-    this.window.contentView.addChildView(this.view)
+    // NW.js frame attributes
+    this.iframe.setAttribute('nwfaketop', '') // Treat iframe as top-level for window.top
+    this.iframe.setAttribute('nwdisable', '') // Disable Node.js in iframe content
+    this.iframe.setAttribute('nwUserAgent', CHROME_UA)
 
-    // Track fullscreen state explicitly; some environments delay isFullScreen()
-    this._isFullscreen = !!this.window?.isFullScreen?.()
-    this._isMaximized = !!this.window?.isMaximized?.()
+    // Style iframe
+    this.iframe.style.cssText = `
+      position: absolute;
+      border: none;
+      border-radius: 8px;
+      background: #fff;
+      display: none;
+    `
+
+    // Allow permissions
+    this.iframe.setAttribute(
+      'allow',
+      'camera; microphone; geolocation; autoplay; encrypted-media; fullscreen',
+    )
+    this.iframe.setAttribute('allowfullscreen', 'true')
+
+    // Store parent container and window references
+    this.container = parentContainer
+    this.window = nw.Window.get()
+
+    // Append to container
+    this.container.appendChild(this.iframe)
+
+    // Create webContents-like interface for compatibility
+    this.webContents = this.createWebContentsInterface()
+
+    // Track window state
+    this._isFullscreen = false
+    this._isMaximized = false
+
+    // Setup window listeners
     this._onEnterFs = () => {
       this._isFullscreen = true
       this.invalidateLayout()
@@ -32,18 +61,153 @@ class Tab {
       this._isFullscreen = false
       this.invalidateLayout()
     }
-    this._onMaximize = () => {
-      this._isMaximized = true
+    this._onResize = () => {
       this.invalidateLayout()
     }
-    this._onUnmaximize = () => {
-      this._isMaximized = false
-      this.invalidateLayout()
+
+    this.window.on('enter-fullscreen', this._onEnterFs)
+    this.window.on('leave-fullscreen', this._onLeaveFs)
+    this.window.on('resize', this._onResize)
+
+    // Track navigation for history
+    this.currentURL = 'about:blank'
+    this.currentTitle = ''
+
+    // Setup iframe load listener
+    this.iframe.addEventListener('load', () => {
+      try {
+        // Update current URL and title
+        this.currentURL = this.iframe.contentWindow.location.href
+        this.currentTitle = this.iframe.contentWindow.document.title || this.currentURL
+
+        // Emit navigation events
+        if (this.webContents._emitter) {
+          this.webContents._emitter.emit('did-navigate', null, this.currentURL)
+          this.webContents._emitter.emit('did-finish-load')
+          this.webContents._emitter.emit('page-title-updated', null, this.currentTitle)
+        }
+      } catch (err) {
+        // Cross-origin iframe, can't access
+        console.log('[Tab] Cross-origin iframe, cannot access content')
+      }
+    })
+  }
+
+  createWebContentsInterface() {
+    const self = this
+    const emitter = new EventEmitter()
+
+    return {
+      id: this.id,
+      _emitter: emitter,
+      _iframe: this.iframe,
+
+      loadURL(url) {
+        self.iframe.src = url
+        self.currentURL = url
+        return Promise.resolve()
+      },
+
+      getURL() {
+        try {
+          return self.iframe.contentWindow.location.href
+        } catch {
+          return self.currentURL
+        }
+      },
+
+      getTitle() {
+        try {
+          return self.iframe.contentWindow.document.title || self.currentTitle
+        } catch {
+          return self.currentTitle
+        }
+      },
+
+      reload() {
+        if (self.iframe.contentWindow) {
+          self.iframe.contentWindow.location.reload()
+        }
+      },
+
+      goBack() {
+        if (self.iframe.contentWindow) {
+          self.iframe.contentWindow.history.back()
+        }
+      },
+
+      goForward() {
+        if (self.iframe.contentWindow) {
+          self.iframe.contentWindow.history.forward()
+        }
+      },
+
+      canGoBack() {
+        try {
+          return self.iframe.contentWindow.history.length > 1
+        } catch {
+          return false
+        }
+      },
+
+      canGoForward() {
+        try {
+          return self.iframe.contentWindow.history.length > 1
+        } catch {
+          return false
+        }
+      },
+
+      toggleDevTools() {
+        // In NW.js, DevTools for iframes can be opened
+        if (self.iframe.contentWindow) {
+          try {
+            self.iframe.contentWindow.nw.Window.get().showDevTools()
+          } catch (err) {
+            console.log('[Tab] DevTools not available for this iframe')
+          }
+        }
+      },
+
+      executeJavaScript(code) {
+        return new Promise((resolve, reject) => {
+          try {
+            const result = self.iframe.contentWindow.eval(code)
+            resolve(result)
+          } catch (err) {
+            reject(err)
+          }
+        })
+      },
+
+      isDestroyed() {
+        return self.destroyed
+      },
+
+      on(event, handler) {
+        emitter.on(event, handler)
+      },
+
+      once(event, handler) {
+        emitter.once(event, handler)
+      },
+
+      removeListener(event, handler) {
+        emitter.removeListener(event, handler)
+      },
+
+      emit(event, ...args) {
+        emitter.emit(event, ...args)
+      },
+
+      getType() {
+        return 'webview' // Pretend to be webview for compatibility
+      },
+
+      getOwnerBrowserWindow() {
+        return self.window
+      },
     }
-    this.window.on('enter-full-screen', this._onEnterFs)
-    this.window.on('leave-full-screen', this._onLeaveFs)
-    this.window.on('maximize', this._onMaximize)
-    this.window.on('unmaximize', this._onUnmaximize)
   }
 
   setExtraTop(pixels) {
@@ -75,90 +239,77 @@ class Tab {
 
     this.hide()
 
-    // Remove fullscreen listeners
+    // Remove window listeners
     try {
-      this.window.off('enter-full-screen', this._onEnterFs)
+      this.window.off('enter-fullscreen', this._onEnterFs)
     } catch {}
     try {
-      this.window.off('leave-full-screen', this._onLeaveFs)
+      this.window.off('leave-fullscreen', this._onLeaveFs)
     } catch {}
     try {
-      this.window.off('maximize', this._onMaximize)
-    } catch {}
-    try {
-      this.window.off('unmaximize', this._onUnmaximize)
+      this.window.off('resize', this._onResize)
     } catch {}
 
-    this.window.contentView.removeChildView(this.view)
-    this.window = undefined
-
-    if (!this.webContents.isDestroyed()) {
-      if (this.webContents.isDevToolsOpened()) {
-        this.webContents.closeDevTools()
-      }
-
-      // TODO: why is this no longer called?
-      this.webContents.emit('destroyed')
-
-      this.webContents.destroy()
+    // Remove iframe from DOM
+    if (this.iframe && this.iframe.parentNode) {
+      this.iframe.parentNode.removeChild(this.iframe)
     }
 
-    this.webContents = undefined
-    this.view = undefined
+    this.iframe = null
+    this.webContents = null
+    this.window = null
   }
 
   loadURL(url) {
-    return this.view.webContents.loadURL(url)
+    this.iframe.src = url
+    this.currentURL = url
+    return Promise.resolve()
   }
 
   show() {
     this.invalidateLayout()
-    this.startResizeListener()
-    this.view.setVisible(true)
+    this.iframe.style.display = 'block'
   }
 
   hide() {
-    this.stopResizeListener()
-    this.view.setVisible(false)
+    this.iframe.style.display = 'none'
   }
 
   reload() {
-    this.view.webContents.reload()
+    if (this.iframe.contentWindow) {
+      this.iframe.contentWindow.location.reload()
+    }
   }
 
   invalidateLayout() {
-    const [width, height] = this.window.getSize()
+    if (!this.window || this.destroyed) return
+
+    const [width, height] = [this.window.window.innerWidth, this.window.window.innerHeight]
     const padding = 8
-    // Compute current state defensively in case events lag
-    const isFs =
-      typeof this.window.isFullScreen === 'function'
-        ? this.window.isFullScreen()
-        : this._isFullscreen
-    const isMax =
-      typeof this.window.isMaximized === 'function' ? this.window.isMaximized() : this._isMaximized
+
+    // Compute current state
+    const isFs = this._isFullscreen
+    const isMax = this._isMaximized
     const padMult = isFs || isMax ? 4 : 2
     const heightPadMult = isFs || isMax ? 3 : 1
+
     const bounds = {
       x: padding,
       y: toolbarHeight + this.extraTop,
       width: width - padding * padMult - this.aiPanelWidth,
       height: height - (toolbarHeight + this.extraTop) - padding * heightPadMult,
     }
+
     console.log(
       `Tab ${this.id} invalidateLayout: window=${width}x${height}, aiPanelWidth=${this.aiPanelWidth}, setting bounds:`,
       bounds,
     )
-    this.view.setBounds(bounds)
-    this.view.setBorderRadius(8)
-  }
 
-  // Replacement for BrowserView.setAutoResize. This could probably be better...
-  startResizeListener() {
-    this.stopResizeListener()
-    this.window.on('resize', this.invalidateLayout)
-  }
-  stopResizeListener() {
-    this.window.off('resize', this.invalidateLayout)
+    // Apply bounds to iframe
+    this.iframe.style.left = bounds.x + 'px'
+    this.iframe.style.top = bounds.y + 'px'
+    this.iframe.style.width = bounds.width + 'px'
+    this.iframe.style.height = bounds.height + 'px'
   }
 }
 
@@ -166,9 +317,14 @@ class Tabs extends EventEmitter {
   tabList = []
   selected = null
 
-  constructor(browserWindow) {
+  constructor(containerElement) {
     super()
-    this.window = browserWindow
+    this.container = containerElement || document.getElementById('tab-container')
+    this.window = nw.Window.get()
+
+    if (!this.container) {
+      console.error('[Tabs] Tab container element not found!')
+    }
   }
 
   setExtraTop(pixels) {
@@ -183,12 +339,11 @@ class Tabs extends EventEmitter {
   destroy() {
     this.tabList.forEach((tab) => tab.destroy())
     this.tabList = []
-
-    this.selected = undefined
+    this.selected = null
 
     if (this.window) {
-      this.window.destroy()
-      this.window = undefined
+      this.window.close()
+      this.window = null
     }
   }
 
@@ -196,11 +351,11 @@ class Tabs extends EventEmitter {
     return this.tabList.find((tab) => tab.id === tabId)
   }
 
-  create(webContentsViewOptions) {
-    const tab = new Tab(this.window, webContentsViewOptions)
+  create(options) {
+    const tab = new Tab(this.container, options)
     this.tabList.push(tab)
     if (!this.selected) this.selected = tab
-    tab.show() // must be attached to window
+    tab.show()
     this.emit('tab-created', tab)
     this.select(tab.id)
     return tab
@@ -215,13 +370,14 @@ class Tabs extends EventEmitter {
     this.tabList.splice(tabIndex, 1)
     tab.destroy()
     if (this.selected === tab) {
-      this.selected = undefined
+      this.selected = null
       const nextTab = this.tabList[tabIndex] || this.tabList[tabIndex - 1]
       if (nextTab) this.select(nextTab.id)
     }
     this.emit('tab-destroyed', tab)
     if (this.tabList.length === 0) {
-      this.destroy()
+      // Don't destroy window, just close all tabs
+      console.log('[Tabs] All tabs closed')
     }
   }
 

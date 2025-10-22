@@ -56,6 +56,8 @@
 
       .topbar {
         background: var(--bg-color);
+        position: relative;
+        z-index: 10;
       }
 
       /*----- TABS -----*/
@@ -528,6 +530,11 @@
     </style>
   </head>
   <body>
+    <!-- Tab Content Container (iframes rendered here) -->
+    <div id="tab-container" style="position: fixed; top: 64px; left: 8px; right: 8px; bottom: 8px; z-index: 1; display: block;">
+      <!-- Tab iframes will be injected here dynamically -->
+    </div>
+    
     <div class="topbar">
       <div id="tabstrip">
         <div class="tab-container">
@@ -689,6 +696,7 @@
       </div>
     </div>
   <link rel="stylesheet" href="./ai-chat.css">
+  <script src="./webui-main.js"></script>
   <script src="./theme-loader.js"></script>
   <script src="./ai-chat.js"></script>
   <script src="./webui.js"></script>
