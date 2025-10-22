@@ -1,8 +1,20 @@
 import { ipcRenderer, contextBridge, webFrame } from 'electron'
 
-/**
- * Injects `<browser-action>` custom element into the current webpage.
- */
+const __electronAPI__ = {
+  send: (channel: string, data?: any) => {
+    const validChannels = [
+      'clear-history',
+      'delete-history-entries',
+      'apply-theme',
+      'open-url-in-tab',
+    ]
+    if (validChannels.includes(channel)) {
+      ipcRenderer.send(channel, data)
+    }
+  },
+}
+// ------------------------------------
+
 export const injectBrowserAction = () => {
   const actionMap = new Map<string, any>()
   const observerCounts = new Map<string, number>()
@@ -466,6 +478,7 @@ export const injectBrowserAction = () => {
 
   if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('browserAction', __browserAction__)
+    contextBridge.exposeInMainWorld('electronAPI', __electronAPI__)
 
     // Must execute script in main world to modify custom component registry.
     if ('executeInMainWorld' in contextBridge) {

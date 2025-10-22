@@ -5,14 +5,27 @@
     <title>Shell Browser</title>
     <style>
       :root {
-        /* https://colorhunt.co/palette/161920 */
-        --bg-color: #39375b;
-        --text-color: #ececec;
-        --tab-color: #745c97;
-        --toolbar-control-color: #d597ce;
-
+        --bg-color: #111112;
+        --text-color: #e0e0e0;
+        --tab-color: #232324;
+        --toolbar-control-color: #444448;
+        --tab-active-color: #2c2c2e;
+        --tab-hover-color: #29292b;
+        --input-bg: #18181a;
+        --input-border: #333335;
+        --input-focus: #444448;
+        --icon-filter: invert(1) brightness(2);
         /* electron-chrome-extensions colors */
         --browser-action-badge-outline: var(--tab-color);
+        
+        /* Animation variables */
+        --transition-fast: 0.15s ease-out;
+        --transition-normal: 0.25s ease-out;
+        --transition-slow: 0.35s ease-out;
+        --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        --page-fadein-duration: 1.0s; /* Adjustable page fade-in duration */
+        --tab-slide-duration: 0.08s;   /* Adjustable tab slide animation duration */
       }
       
       *, *:before, *:after {
@@ -30,7 +43,7 @@
       body {
         padding: 0;
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif;
+        font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
         font-size: 16px;
         color: var(--text-color);
       }
@@ -73,12 +86,48 @@
         background: transparent;
         border: none;
         color: #fff;
-        font-weight: bold;
-        font-family: 'Courier New', Courier, monospace;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+        transition: all var(--transition-normal) var(--smooth);
+        transform: scale(1);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        margin: auto 0;
       }
 
       #createtab:hover {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.15);
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+
+      #createtab:active {
+        transform: scale(0.95);
+        background: rgba(255,255,255,0.25);
+      }
+
+      #createtab::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255,255,255,0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all var(--transition-normal) var(--smooth);
+      }
+
+      #createtab:hover::before {
+        width: 100%;
+        height: 100%;
       }
 
       .tab {
@@ -90,10 +139,60 @@
         align-items: center;
         width: 12rem;
         box-shadow: inset -1px 0 0 0 rgba(0,0,0,0.33);
+        border-radius: 0.75rem 0.75rem 0 0;
+        transition: all var(--transition-normal) var(--smooth);
+        transform: translateY(0);
+        position: relative;
+        cursor: pointer;
       }
 
       .tab[data-active] {
-        background: var(--tab-color);
+        background: var(--tab-active-color);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset -1px 0 0 0 rgba(0,0,0,0.33);
+      }
+
+      .tab:hover {
+        background: var(--tab-hover-color);
+        transform: translateY(-0.5px);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.15), inset -1px 0 0 0 rgba(0,0,0,0.33);
+      }
+
+      .tab:active {
+        transform: translateY(0);
+        transition: all var(--transition-fast) var(--smooth);
+      }
+
+      /* Tab slide-in animation */
+      .tab.tab-enter {
+        animation: tabSlideIn var(--tab-slide-duration) var(--smooth);
+      }
+
+      @keyframes tabSlideIn {
+        0% {
+          opacity: 0;
+          transform: translateX(-50%);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* Tab slide-out animation */
+      .tab.tab-exit {
+        animation: tabSlideOut var(--tab-slide-duration) var(--smooth);
+      }
+
+      @keyframes tabSlideOut {
+        0% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(-50%);
+        }
       }
 
       .tab .favicon[src] {
@@ -134,6 +233,23 @@
         font-size: 0.7rem;
         vertical-align: middle;
         line-height: 0;
+        transition: all var(--transition-fast) var(--smooth);
+        transform: scale(1);
+        cursor: pointer;
+        opacity: 0.7;
+      }
+
+      .tab .controls .control:hover {
+        background: rgba(255,0,0,0.2);
+        color: #ff4444;
+        transform: scale(1.2);
+        opacity: 1;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+
+      .tab .controls .control:active {
+        transform: scale(0.9);
+        background: rgba(255,0,0,0.3);
       }
 
       .tab .controls .control:disabled {
@@ -182,31 +298,232 @@
       .toolbar .page-controls {
         margin-right: 0.5rem;
       }
+
+      .toolbar .right-controls {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      browser-action-list#actions {
+        margin-left: 0.5rem;
+      }
       
       .address-bar {
         flex: 1 0 auto;
         line-height: 0;
         height: 100%;
+        position: relative;
+        -webkit-app-region: no-drag;  /* Allow drag-drop files here */
       }
 
       .address-bar input {
         width: 100%;
         height: 100%;
-        background: var(--bg-color);
+        background: var(--input-bg);
         color: var(--text-color);
-        border: none;
+        border: 2px solid var(--input-border);
         border-radius: 2rem;
-        padding: 0 0.5rem;
+        padding: 0 2rem 0 0.5rem;
         outline: none;
+        transition: border 0.2s ease;
+      }
+      .address-bar input:focus {
+        border: 2.5px solid var(--input-focus);
+      }
+      .address-bar input:hover {
+        border-color: var(--input-focus);
+      }
+
+      .address-bar .star-button {
+        position: absolute;
+        right: 0.35rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        padding: 0;
+        line-height: 0;
+        border-radius: 0.5rem;
+        transition: all var(--transition-fast) var(--smooth);
+        cursor: pointer;
+        opacity: 0.7;
+      }
+      .address-bar .star-button:hover {
+        background: rgba(255,255,255,0.1);
+        transform: translateY(-50%) scale(1.15);
+        opacity: 1;
+      }
+      .address-bar .star-button:active {
+        transform: translateY(-50%) scale(0.9);
+        background: rgba(255,255,255,0.2);
+      }
+      .address-bar .star-button img {
+        width: 18px;
+        height: 18px;
+        filter: var(--icon-filter);
+        vertical-align: middle;
+        transition: all var(--transition-fast) var(--smooth);
       }
 
       .toolbar .control {
         background: none;
         border: none;
-        width: 1.5rem;
-        height: 1.5rem;
+        width: 1.25rem;
+        height: 1.25rem;
         padding: 0;
         line-height: 0;
+        border-radius: 0.5rem;
+        transition: all var(--transition-fast) var(--smooth);
+        cursor: pointer;
+        transform: scale(1);
+        opacity: 0.8;
+        position: relative;
+        overflow: hidden;
+      }
+      .toolbar .control:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.1);
+        opacity: 1;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      .toolbar .control:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.25);
+      }
+      .toolbar .control img {
+        width: 16px;
+        height: 16px;
+        filter: var(--icon-filter);
+        vertical-align: middle;
+        transition: all var(--transition-fast) var(--smooth);
+      }
+      .toolbar .control:hover img {
+        transform: scale(1.05);
+      }
+
+      /* Download indicator badge and animations */
+      #downloads {
+        position: relative;
+      }
+      #downloads .badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 14px;
+        height: 14px;
+        padding: 0 3px;
+        background: #4dabf7;
+        color: #000;
+        border-radius: 7px;
+        font-size: 10px;
+        line-height: 14px;
+        text-align: center;
+        display: none;
+      }
+      @keyframes pulse-download {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+        100% { transform: scale(1); }
+      }
+      #downloads.downloading {
+        animation: pulse-download 0.8s var(--smooth) infinite;
+      }
+      @keyframes flash-complete {
+        0% { box-shadow: 0 0 0 0 rgba(77,171,247,0.0); }
+        25% { box-shadow: 0 0 0 6px rgba(77,171,247,0.25); }
+        100% { box-shadow: 0 0 0 0 rgba(77,171,247,0.0); }
+      }
+      #downloads.download-complete {
+        animation: flash-complete 0.9s ease-out 1;
+      }
+
+      .right-controls {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      /* Page fade-in animation */
+      .page-fade-in {
+        animation: pageFadeIn var(--page-fadein-duration) var(--smooth);
+      }
+      @keyframes pageFadeIn {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+      }
+
+      /* AI Chat Panel */
+      .ai-chat-panel {
+        position: fixed;
+        top: calc(env(titlebar-area-height, 31px) + 1px + 1.875rem);
+        right: -450px; /* Hidden by default */
+        width: 320px;
+        height: calc(100vh - calc(env(titlebar-area-height, 31px) + 1px + 1.875rem) - 20px);
+        background: var(--tab-color);
+        border: 2px solid var(--input-border);
+        border-radius: 25px;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+        transition: right var(--transition-normal) var(--smooth);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        margin: 10px;
+      }
+
+      .ai-chat-panel.open {
+        right: 10px;
+      }
+
+      .ai-close-button {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255,255,255,0.1);
+        border: none;
+        color: var(--text-color);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        transition: all var(--transition-fast) var(--smooth);
+        line-height: 1;
+        z-index: 10;
+      }
+
+      .ai-close-button:hover {
+        background: rgba(255,100,100,0.3);
+        color: #ff6b6b;
+        transform: scale(1.1);
+      }
+
+      .ai-close-button:active {
+        transform: scale(0.95);
+      }
+
+      .ai-panel-content {
+        width: 100%;
+        height: 100%;
+        padding: 50px 20px 20px 20px; /* Extra top padding for close button */
+        overflow-y: auto;
+        background: var(--input-bg);
+        border-radius: 23px;
+        box-sizing: border-box;
+      }
+
+      /* Adjust body when AI panel is open */
+      body.ai-panel-open {
+        --ai-panel-width: 340px;
       }
     </style>
   </head>
@@ -237,17 +554,143 @@
       </div>
       <div class="toolbar">
         <div class="page-controls">
-          <button id="goback" class="control">⬅️</button>
-          <button id="goforward" class="control">➡️</button>
-          <button id="reload" class="control">🔄</button>
+          <button id="goback" class="control"><img src="./previous-page.png" alt="Back" width="20" height="20" /></button>
+          <button id="goforward" class="control"><img src="./next-page.png" alt="Forward" width="20" height="20" /></button>
+          <button id="reload" class="control"><img src="./refresh.png" alt="Reload" width="20" height="20" /></button>
         </div>
         <div class="address-bar">
           <input id="addressurl" spellcheck="false" />
+          <button id="star-button" class="star-button" aria-label="Bookmark this page">
+            <img id="star-icon" src="./unselected-star.png" alt="Bookmark" />
+          </button>
+          <div id="address-suggestions" style="position:absolute; left:0; right:2rem; top: calc(100% + 4px); z-index: 50; display:none;
+            background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.35); overflow:hidden;
+          "></div>
         </div>
         <browser-action-list id="actions" alignment="bottom left"></browser-action-list>
+        <div class="right-controls">
+          <button id="ai-bot" class="control" aria-label="AI Assistant"><img src="./ai-bot.png" alt="AI Assistant" width="20" height="20" /></button>
+          <button id="bookmarks" class="control" aria-label="Bookmarks"><img src="./bookmark-not-toggled.png" alt="Bookmarks" width="20" height="20" /></button>
+          <button id="downloads" class="control" aria-label="Downloads"><img src="./download.png" alt="Downloads" width="20" height="20" /><span class="badge" id="downloads-badge"></span></button>
+          <button id="settings" class="control" aria-label="Settings"><img src="./settings-sliders.png" alt="Settings" width="20" height="20" /></button>
+        </div>
       </div>
     </div>
-  </div>
+    
+    <!-- AI Chat Panel -->
+    <div id="ai-chat-panel" class="ai-chat-panel">
+      <button id="ai-panel-close" class="ai-close-button">×</button>
+      <div id="ai-chat-container" class="ai-chat-container">
+        <!-- Header -->
+          <div class="ai-chat-header">
+            <img src="./vlinder-butterply.png" alt="Vlinder AI" class="ai-chat-logo" />
+            <div class="ai-header-buttons">
+              <button id="ai-settings-btn" class="ai-settings-btn" title="Settings">
+                <img src="./ai-sett.png" alt="Settings" />
+              </button>
+              <button id="ai-new-chat-btn" class="ai-new-chat-btn">New Chat</button>
+            </div>
+          </div>
+        
+        <!-- Messages Container -->
+        <div id="ai-messages-container" class="ai-messages-container">
+          <div id="ai-empty-state" class="ai-empty-state">
+            <img src="./vlinder-ai.png" alt="Vlinder AI" class="ai-empty-state-logo" />
+          </div>
+        </div>
+        
+        <!-- Input Container -->
+          <div class="ai-input-container">
+            <div id="ai-file-attachments" class="ai-file-attachments" style="display: none;"></div>
+            <div class="ai-input-wrapper">
+              <button id="ai-file-btn" class="ai-input-btn" title="Attach file">
+                <img src="./attach.png" alt="Attach" />
+              </button>
+              <textarea
+                id="ai-input-textarea"
+                class="ai-input-textarea"
+                placeholder="Ask Anything..."
+                rows="1"
+              ></textarea>
+              <button id="ai-send-btn" class="ai-input-btn ai-send-btn" title="Send message">
+                <img src="./send.png" alt="Send" />
+              </button>
+            </div>
+            <input type="file" id="ai-file-input" style="display: none;" multiple accept="image/*,.pdf,.txt,.doc,.docx" />
+          </div>
+      </div>
+      
+      <!-- Settings Modal -->
+      <div id="ai-settings-modal" class="ai-settings-modal hidden">
+        <div class="ai-settings-content">
+          <div class="ai-settings-header">
+            <h2 class="ai-settings-title">Settings</h2>
+            <button id="ai-settings-close" class="ai-settings-close">×</button>
+          </div>
+          
+          <div class="ai-settings-tabs">
+            <button class="ai-settings-tab active" data-tab="api-key">API Key</button>
+            <button class="ai-settings-tab" data-tab="model">Model</button>
+          </div>
+          
+          <div class="ai-settings-body">
+            <!-- API Key Section -->
+            <div id="settings-api-key" class="ai-settings-section active">
+              <label class="ai-settings-label">OpenRouter API Key</label>
+              <input 
+                type="text" 
+                id="ai-settings-api-key-input" 
+                class="ai-settings-input" 
+                placeholder="sk-or-v1-..." 
+              />
+              <button id="ai-settings-save-key" class="ai-settings-save">Update API Key</button>
+            </div>
+            
+            <!-- Model Section -->
+            <div id="settings-model" class="ai-settings-section">
+              <div class="ai-current-model">
+                <div class="ai-current-model-label">Current Model</div>
+                <div id="ai-current-model-display" class="ai-current-model-name">GPT-3.5 Turbo</div>
+              </div>
+              
+              <label class="ai-settings-label">Search Models</label>
+              <input 
+                type="text" 
+                id="ai-model-search" 
+                class="ai-model-search" 
+                placeholder="Search models..." 
+              />
+              
+              <div id="ai-model-list" class="ai-model-list">
+                <div class="ai-model-loading">Loading models...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- API Key Modal -->
+      <div id="ai-api-key-modal" class="ai-api-key-modal hidden">
+        <div class="ai-api-key-content">
+          <h2 class="ai-api-key-title">Setup OpenRouter API Key</h2>
+          <p class="ai-api-key-description">
+            To use the AI assistant, you need an OpenRouter API key.
+            <a href="https://openrouter.ai/keys" target="_blank" class="ai-api-key-link">Get your API key here</a>
+          </p>
+          <input 
+            type="text" 
+            id="ai-api-key-input" 
+            class="ai-api-key-input" 
+            placeholder="sk-or-v1-..." 
+          />
+          <div id="ai-api-key-error" class="ai-api-key-error"></div>
+          <button id="ai-api-key-save" class="ai-api-key-save">Save API Key</button>
+        </div>
+      </div>
+    </div>
+  <link rel="stylesheet" href="./ai-chat.css">
+  <script src="./theme-loader.js"></script>
+  <script src="./ai-chat.js"></script>
   <script src="./webui.js"></script>
   </body>
 </html>

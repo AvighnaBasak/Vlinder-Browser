@@ -1,31 +1,335 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>New Tab</title>
-    <style>
-      body {
-        font-size: 16px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>New Tab</h1>
-    <ul>
-      <li><a href="https://www.google.com">https://www.google.com</a></li>
-      <li><a href="https://www.youtube.com">https://www.youtube.com</a></li>
-      <li>
-        <a href="https://github.com/electron/electron">https://github.com/electron/electron</a>
-      </li>
-      <li>
-        <a href="https://github.com/samuelmaddock/electron-browser-shell"
-          >https://github.com/samuelmaddock/electron-browser-shell</a
-        >
-      </li>
-      <li><a href="https://chromewebstore.google.com">https://chromewebstore.google.com</a></li>
-      <li><a href="https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home">https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home</a></li>
-      <li><a href="https://permission.site">https://permission.site</a></li>
-      <li><a href="https://samuelmaddock.com">https://samuelmaddock.com</a></li>
-    </ul>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New Tab</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --text-color: #E0E0E0;
+      --secondary: #2C2C2C;
+      --accent: #8AB4F8;
+    }
+    html, body { height: 100%; margin: 0; }
+    body { background: var(--bg-color); color: var(--text-color); overflow: hidden; }
+    #vanta { position: fixed; inset: 0; z-index: 0; }
+    #custom-background { position: fixed; inset: 0; z-index: 0; background-size: cover; background-position: center; background-repeat: no-repeat; display: none; }
+    body.solid-bg { background: var(--bg-color); }
+    body.solid-bg #vanta, body.solid-bg #custom-background { display: none !important; }
+    .content { position: relative; z-index: 1; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .stack { display: flex; flex-direction: column; align-items: center; gap: 20px; width: min(684px, 87.4vw); }  /* Change gap value to adjust spacing between logo, search, and shortcuts */
+    .brand { 
+      width: 300px;  /* Adjust logo width */
+      height: auto;  /* Maintain aspect ratio */
+      filter: drop-shadow(0 5.7px 22.8px rgba(0,0,0,0.65));  /* Same shadow as text had */
+    }
+    .search {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.05); /* slightly less transparent for depth */
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 999px;
+      padding: 6px 10px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      filter: url(#glass-distortion);
+      box-shadow: 0 8px 32px 0 rgba(0,0,0,0.22), 0 1.5px 8px 0 rgba(0,0,0,0.10) inset;
+      position: relative;
+      overflow: visible;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search:before {
+      content: '';
+      position: absolute;
+      left: 5%;
+      top: 0;
+      width: 90%;
+      height: 18%;
+      border-radius: 999px 999px 60% 60%/80% 80% 40% 40%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.07) 100%);
+      pointer-events: none;
+      filter: blur(8.5px);
+      z-index: 2;
+    }
+    .search:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(138,180,248,0.15), 0 8px 32px 0 rgba(0,0,0,0.22), 0 1.5px 8px 0 rgba(0,0,0,0.10) inset;
+    }
+    .search input { flex: 1; height: 48px; border: none; outline: none; background: transparent; color: var(--text-color); font-size: 16px; padding: 0 12px; font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace; }
+    .search button {
+      width: 45.6px;
+      height: 45.6px;
+      border-radius: 50%;
+      border: 1px solid #333;
+      background: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .search button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0px 12px rgba(138,180,248,0.15);
+    }
+    .search button:active {
+      transform: scale(0.95);
+    }
+    .search button img { width: 20.9px; height: 20.9px; filter: invert(0); }
+    
+    /* Quick Links */
+    .quick-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;  /* Change this to adjust spacing between quick links */
+      flex-wrap: wrap;
+      /* Spacing now controlled by .stack gap for even distribution */
+    }
+    .quick-link {
+      width: 64px;  /* Change this to adjust quick link box width */
+      height: 64px;  /* Change this to adjust quick link box height */
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+    .quick-link:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+    .quick-link img {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    .quick-link .remove-btn {
+      position: absolute;
+      top: 4px;  /* Change this to adjust vertical position of X button container */
+      right: 4px;  /* Change this to adjust horizontal position of X button container */
+      width: 18px;  /* Change this to adjust X button size */
+      height: 18px;  /* Change this to adjust X button size */
+      background: rgba(100,100,100,0.9);  /* Monochrome gray background */
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;  /* Change this to adjust × symbol size */
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+    }
+    .quick-link .remove-btn::before {
+      content: '×';
+      display: block;
+      transform: translateY(-1px);  /* Change this to move × up/down (negative = up, positive = down) */
+    }
+    .quick-link:hover .remove-btn {
+      display: flex;
+    }
+    .quick-link.add-link {
+      width: 64px;  /* Change this to adjust + button size */
+      height: 64px;  /* Change this to adjust + button size */
+      border-radius: 50%;  /* Makes it circular */
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      color: transparent;  /* Hide the actual + text */
+      font-size: 36px;
+      font-weight: 300;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      filter: url(#glass-distortion);
+      box-shadow: 0 8px 32px 0 rgba(0,0,0,0.22), 0 1.5px 8px 0 rgba(0,0,0,0.10) inset;
+      position: relative;
+      overflow: visible;
+    }
+    .quick-link.add-link::after {
+      content: '+';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, calc(-50% - 5px));  /* Change -5px to move + up/down (negative = up, positive = down) */
+      color: var(--accent);
+      font-size: 36px;  /* Change this to adjust + symbol size */
+      font-weight: 300;
+    }
+    .quick-link.add-link:before {
+      content: '';
+      position: absolute;
+      left: 5%;
+      top: 0;
+      width: 90%;
+      height: 18%;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.07) 100%);
+      pointer-events: none;
+      filter: blur(8.5px);
+      z-index: 2;
+    }
+    .quick-link.add-link:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(138,180,248,0.15), 0 8px 32px 0 rgba(0,0,0,0.22), 0 1.5px 8px 0 rgba(0,0,0,0.10) inset;
+    }
+    
+    /* Add Link Dialog */
+    .add-link-dialog {
+      position: fixed;
+      top: 50%;  /* Change this to adjust vertical position of dialog */
+      left: 50%;  /* Change this to adjust horizontal position of dialog */
+      transform: translate(-50%, -50%);
+      background: rgba(30,30,35,0.98);
+      border: 2px solid rgba(138,180,248,0.3);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: none;
+      min-width: 400px;  /* Change this to adjust dialog box width */
+    }
+    .add-link-dialog.show {
+      display: block;
+    }
+    .add-link-dialog h3 {
+      margin: 0 0 16px 0;
+      color: var(--text-color);
+      font-size: 18px;  /* Change this to adjust "Add Quick Link" text size */
+      font-weight: 700;  /* Change this to adjust "Add Quick Link" text weight (400=normal, 600=semi-bold, 700=bold) */
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', monospace;  /* Change this to use different font */
+      letter-spacing: 0.5px;  /* Change this to adjust spacing between letters */
+    }
+    .add-link-dialog input {
+      width: 92%;
+      padding: 12px 16px;  /* Change padding to adjust input box internal spacing */
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      color: var(--text-color);
+      font-size: 14px;  /* Change this to adjust text size in input box */
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', monospace;
+      outline: none;
+      margin-bottom: 16px;
+    }
+    .add-link-dialog input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(138,180,248,0.15);
+    }
+    .add-link-dialog-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .add-link-dialog button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', monospace;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .add-link-dialog button.cancel {
+      background: rgba(255,255,255,0.1);
+      color: var(--text-color);
+    }
+    .add-link-dialog button.cancel:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    .add-link-dialog button.add {
+      background: var(--accent);
+      color: white;
+    }
+    .add-link-dialog button.add:hover {
+      background: color-mix(in srgb, var(--accent) 90%, white 10%);
+      transform: translateY(-1px);
+    }
+    .dialog-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 9998;
+      display: none;
+    }
+    .dialog-overlay.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="vanta"></canvas>
+  <div id="custom-background"></div>
+  
+  <!-- Add Link Dialog -->
+  <div class="dialog-overlay" id="dialog-overlay"></div>
+  <div class="add-link-dialog" id="add-link-dialog">
+    <h3>Add Quick Link</h3>
+    <input type="text" id="link-url-input" placeholder="Enter URL (e.g., www.youtube.com)" />
+    <div class="add-link-dialog-buttons">
+      <button class="cancel" id="dialog-cancel">Cancel</button>
+      <button class="add" id="dialog-add">Add</button>
+    </div>
+  </div>
+  
+  <div class="content">
+    <div class="stack">
+      <img src="./vlinder-logo.png" alt="Vlinder" class="brand" />
+      <form id="search-form" class="search">
+        <input id="q" autocomplete="off" placeholder="Search the web" />
+        <button type="submit" aria-label="Search"><img src="./search.png" alt="Search" /></button>
+      </form>
+      <div class="quick-links" id="quick-links"></div>
+    </div>
+  </div>
+
+  <!-- SVG FILTER DEFINITION FOR LIQUID GLASS EFFECT -->
+<svg width="0" height="0">
+  <filter id="glass-distortion" 
+          color-interpolation-filters="sRGB" 
+          x="0%" y="0%" width="100%" height="100%">
+    
+    <!-- smoother fractal noise (fine detail) -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="5" seed="3" result="turb"/>
+    
+    <!-- soften the noise to avoid pixelation -->
+    <feGaussianBlur in="turb" stdDeviation="12" result="softNoise"/>
+    
+    <!-- apply displacement using softened noise -->
+    <feDisplacementMap in="SourceGraphic" in2="softNoise" 
+                       scale="14" xChannelSelector="R" yChannelSelector="G" />
+    
+    <!-- specular highlights for liquid reflection -->
+    <feSpecularLighting in="softNoise" surfaceScale="1.2" specularConstant="0.35"
+                        specularExponent="60" lighting-color="white" result="specOut">
+      <fePointLight x="-8000" y="-10000" z="20000"/>
+    </feSpecularLighting>
+    
+    <!-- merge highlights with the original element -->
+    <feComposite in="specOut" in2="SourceGraphic" operator="in" result="lit"/>
+    <feMerge>
+      <feMergeNode in="lit"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+</svg>
+  <!-- All background logic moved to new-tab.js to avoid CSP inline script blocking -->
+  <script src="./new-tab.js"></script>
+</body>
 </html>
+
+

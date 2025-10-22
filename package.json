@@ -29,7 +29,11 @@
   },
   "license": "GPL-3.0",
   "author": "Samuel Maddock <sam@samuelmaddock.com>",
-  "dependencies": {},
+  "dependencies": {
+    "animejs": "^4.1.4",
+    "keytar": "^7.9.0",
+    "sqlite3": "^5.1.7"
+  },
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^15.2.10",

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>History</title>
+  <style>
+    :root {
+      /* Bind to existing theme variables so Themes page continues to work */
+      --bg-color: var(--bg-color, #111112);
+      --text-color: var(--text-color, #e5e0e0);
+      --text-secondary: var(--text-secondary, #a0a0a0);
+      --surface: var(--tab-color, #232324);
+      --surface-2: var(--input-bg, #18181a);
+      --border: var(--input-border, #333335);
+      --accent: var(--input-focus, #444448);
+
+      --sidebar-width: 240px;
+      --radius-xl: 18px;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 10px 28px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { overflow-x: hidden; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+      background: radial-gradient(1200px 800px at 10% -10%, color-mix(in srgb, var(--surface) 35%, #000 65%), var(--bg-color)) fixed;
+      color: var(--text-color);
+      margin: 0;
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: var(--sidebar-width);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 75%, #000 25%), var(--bg-color));
+      border-right: 1px solid var(--border);
+      padding: 12px 10px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      color: var(--text-color);
+      text-decoration: none;
+      border: 1px solid transparent;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius);
+      transition: background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    .sidebar-item:hover { background: color-mix(in srgb, var(--surface) 85%, #000 15%); border-color: var(--border); transform: translateX(2px); }
+    .sidebar-item.active { background: color-mix(in srgb, var(--surface) 80%, #000 20%); border-color: var(--accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, #000 65%); }
+
+    .main-content {
+      flex: 1;
+      padding: 20px 24px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .content-section { display: none; opacity: 0; transform: translateY(6px); transition: opacity .18s ease, transform .18s ease; }
+    .content-section.active { display: block; opacity: 1; transform: translateY(0); }
+
+    h1 { margin: 0 0 16px; font-size: 22px; font-weight: 650; letter-spacing: .2px; }
+
+    .search-row { 
+      display: flex; align-items: center; gap: 12px; 
+      background: var(--surface);
+      padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+    .search-input { 
+      flex: 1; height: 44px; border-radius: var(--radius); border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text-color); padding: 0 14px; outline: none;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+    }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+    .action-row { display:flex; align-items:center; justify-content: space-between; margin-top:16px; gap:12px; }
+    .controls { display:flex; gap:10px; align-items:center; }
+
+    button, select, input {
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-color);
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: border-color .15s ease, background .15s ease, transform .1s ease;
+    }
+    button:hover, select:hover { border-color: var(--accent); background: color-mix(in srgb, var(--surface) 80%, #000 20%); }
+    button:active { transform: scale(0.98); }
+    .btn-destructive { background: color-mix(in srgb, #4b1a20 60%, var(--surface) 40%); border-color:#4b1a20; color:#ffd7d7; }
+    .btn-destructive:hover { background: color-mix(in srgb, #7a2b34 60%, var(--surface) 40%); border-color:#7a2b34; }
+    .btn-primary { background: color-mix(in srgb, var(--accent) 25%, var(--surface) 75%); border-color: var(--accent); color:#e6f3ff; }
+
+    #history-list { list-style: none; padding: 0; margin: 16px 0 0; }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 18px 16px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin: 10px 0;
+      padding: 12px 14px;
+      border-radius: var(--radius-xl);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .history-item:hover { border-color: var(--accent); background: color-mix(in srgb, var(--surface) 80%, #000 20%); transform: translateY(-1px); }
+
+    /* Custom checkbox styling */
+    .history-item input[type="checkbox"] { 
+      appearance: none; -webkit-appearance: none; margin: 0; width: 18px; height: 18px; 
+      padding: 0 !important; /* Override input styling */
+      border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); display: grid; place-content: center;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      font-weight: normal !important; /* Override input styling */
+    }
+    .history-item input[type="checkbox"]:hover { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+    .history-item input[type="checkbox"]:checked { background: color-mix(in srgb, var(--accent) 70%, #9fd3ff 30%); border-color: var(--accent); }
+    .history-item input[type="checkbox"]:checked::after { content: ''; width: 10px; height: 10px; border-radius: 3px; background: #0a1422; display: block; }
+
+    .history-item a { color: color-mix(in srgb, var(--accent) 65%, #cfe8ff 35%); text-decoration: none; margin-right: 10px; }
+    .history-item a:hover { text-decoration: underline; }
+    .history-time { opacity: .8; font-size: 13px; white-space: nowrap; }
+
+    .empty-state { text-align: center; opacity: .7; margin-top: 32px; font-size: 14px; }
+
+    /* Themes */
+    .themes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 12px; }
+    .theme-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 16px; cursor: pointer; transition: border-color .15s ease, transform .1s ease, box-shadow .15s ease; }
+    .theme-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .theme-card.active { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+    .theme-preview { display:flex; gap:8px; margin-bottom: 10px; border-radius: var(--radius); overflow: hidden; }
+    .color-swatch { flex:1; height: 32px; border-radius: 6px; }
+    .theme-card h3 { margin: 0 0 4px 0; font-size: 15px; font-weight: 650; }
+    .theme-card p { margin: 0; font-size: 13px; color: var(--text-secondary); }
+    
+    /* Backgrounds */
+    .backgrounds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 12px; }
+    .background-card { 
+      background: var(--surface); 
+      border: 2px solid var(--border); 
+      border-radius: var(--radius); 
+      overflow: hidden; 
+      cursor: pointer; 
+      transition: border-color .15s ease, transform .1s ease, box-shadow .15s ease;
+      will-change: transform;
+    }
+    .background-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .background-card.active { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+    .background-preview { 
+      width: 100%; 
+      height: 90px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      background-size: cover; 
+      background-position: center;
+      background-repeat: no-repeat;
+      contain: paint;
+    }
+    .background-preview img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    .upload-box { 
+      background: var(--surface-2); 
+      border: 2px dashed var(--border); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: var(--text-secondary); 
+      transition: all .2s ease;
+      height: 90px;
+    }
+    .upload-box:hover { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--surface-2) 80%, var(--accent) 20%); }
+
+    /* Scrollbar styling */
+    .main-content, #history-list {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in srgb, var(--accent) 35%, var(--surface) 65%) var(--surface);
+    }
+    .main-content::-webkit-scrollbar, #history-list::-webkit-scrollbar { width: 10px; height: 10px; }
+    .main-content::-webkit-scrollbar-track, #history-list::-webkit-scrollbar-track { background: var(--surface); border-radius: 8px; }
+    .main-content::-webkit-scrollbar-thumb, #history-list::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 35%, var(--surface) 65%); border: 2px solid var(--surface); border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <button class="sidebar-item active" data-section="history">
+      History
+    </button>
+    <button class="sidebar-item" data-section="themes">
+      Themes
+    </button>
+    <button class="sidebar-item" data-section="backgrounds">
+      Backgrounds
+    </button>
+  </div>
+
+  <div class="main-content">
+    <!-- History Section -->
+    <div id="history-section" class="content-section active">
+      <h1>Browsing History</h1>
+
+      <div class="search-row">
+        <input id="history-search" class="search-input" placeholder="Search history" />
+      </div>
+      <div class="action-row">
+        <div></div>
+        <div>
+          <select id="history-clear-select">
+            <option value="hour">Last Hour</option>
+            <option value="day">Last Day</option>
+            <option value="week">Last Week</option>
+            <option value="all">All Time</option>
+          </select>
+          <button id="btn-clear" class="btn-destructive">Clear Selected Duration</button>
+          <button id="btn-delete" class="btn-primary">Delete Selected</button>
+        </div>
+      </div>
+
+      <ul id="history-list"></ul>
+      <div id="empty-state" class="empty-state" style="display: none;">
+        No browsing history found.
+      </div>
+    </div>
+
+    <!-- Themes Section -->
+    <div id="themes-section" class="content-section">
+      <h1>Themes</h1>
+      <p>Choose your preferred color theme for the browser. Changes apply to the entire browser including tabs, address bar, AI panel, and all pages.</p>
+      
+      <div class="themes-grid">
+        <div class="theme-card active" data-theme="default">
+          <div class="theme-preview">
+            <div class="color-swatch" style="background: #111112;"></div>
+            <div class="color-swatch" style="background: #e0e0e0;"></div>
+            <div class="color-swatch" style="background: #232324;"></div>
+            <div class="color-swatch" style="background: #2c2c2e;"></div>
+          </div>
+          <h3>Midnight</h3>
+          <p>Dark and sleek</p>
+        </div>
+        
+        <div class="theme-card" data-theme="ocean">
+          <div class="theme-preview">
+            <div class="color-swatch" style="background: #0a1929;"></div>
+            <div class="color-swatch" style="background: #e3f2fd;"></div>
+            <div class="color-swatch" style="background: #1e3a8a;"></div>
+            <div class="color-swatch" style="background: #3b82f6;"></div>
+          </div>
+          <h3>Ocean Breeze</h3>
+          <p>Cool and refreshing</p>
+        </div>
+        
+        <div class="theme-card" data-theme="forest">
+          <div class="theme-preview">
+            <div class="color-swatch" style="background: #0d1b2a;"></div>
+            <div class="color-swatch" style="background: #f1faee;"></div>
+            <div class="color-swatch" style="background: #2d5016;"></div>
+            <div class="color-swatch" style="background: #52b788;"></div>
+          </div>
+          <h3>Forest Green</h3>
+          <p>Natural and calming</p>
+        </div>
+        
+        <div class="theme-card" data-theme="sunset">
+          <div class="theme-preview">
+            <div class="color-swatch" style="background: #2d1b69;"></div>
+            <div class="color-swatch" style="background: #fff5f5;"></div>
+            <div class="color-swatch" style="background: #7c2d12;"></div>
+            <div class="color-swatch" style="background: #f97316;"></div>
+          </div>
+          <h3>Sunset Glow</h3>
+          <p>Warm and vibrant</p>
+        </div>
+        
+        <div class="theme-card" data-theme="lavender">
+          <div class="theme-preview">
+            <div class="color-swatch" style="background: #1a0b2e;"></div>
+            <div class="color-swatch" style="background: #faf5ff;"></div>
+            <div class="color-swatch" style="background: #581c87;"></div>
+            <div class="color-swatch" style="background: #a855f7;"></div>
+          </div>
+          <h3>Lavender Dreams</h3>
+          <p>Elegant and mystical</p>
+        </div>
+        
+        <div class="theme-card" data-theme="cherry">
+          <div class="theme-preview">
+            <div class="color-swatch" style="background: #2d1b1b;"></div>
+            <div class="color-swatch" style="background: #fef2f2;"></div>
+            <div class="color-swatch" style="background: #7f1d1d;"></div>
+            <div class="color-swatch" style="background: #ef4444;"></div>
+          </div>
+          <h3>Cherry Blossom</h3>
+          <p>Bold and romantic</p>
+        </div>
+      </div>
+      
+      <!-- Advanced Customization Section -->
+      <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <button id="toggle-advanced" class="btn-primary" style="margin-bottom: 16px;">
+          Advanced Customization
+        </button>
+        
+        <div id="advanced-theme-section" style="display: none;">
+          <p style="margin-bottom: 16px; opacity: 0.8;">Customize every color variable in the browser. Changes are applied in real-time.</p>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;" id="color-variables-grid">
+            <!-- Color inputs will be dynamically generated here -->
+          </div>
+          
+          <div style="margin-top: 24px; display: flex; gap: 12px;">
+            <button id="save-custom-theme" class="btn-primary">Save Custom Theme</button>
+            <button id="reset-to-preset" class="btn-destructive">Reset to Preset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Backgrounds Section -->
+    <div id="backgrounds-section" class="content-section">
+      <h1>Backgrounds</h1>
+      <p>Customize the background for your new tab page.</p>
+      
+      <!-- Animated Section -->
+      <div style="margin-bottom: 32px;">
+        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--text-color);">Animated</h2>
+        <div class="backgrounds-grid">
+          <div class="background-card" data-type="animated" data-value="vanta-smoke">
+            <div class="background-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative;">
+              <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                Vanta Smoke
+              </div>
+            </div>
+            <p style="margin: 8px 0 0; font-size: 13px; color: var(--text-color); text-align: center;">Animated Smoke</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Stills Section -->
+      <div style="margin-bottom: 32px;">
+        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--text-color);">Stills</h2>
+        <div id="stills-grid" class="backgrounds-grid">
+          <!-- Background images will be loaded here dynamically -->
+        </div>
+      </div>
+      
+      <!-- Solid Color Section -->
+      <div style="margin-bottom: 32px;">
+        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--text-color);">Solid Color</h2>
+        <div class="backgrounds-grid">
+          <div class="background-card" data-type="solid" id="solid-color-card">
+            <div class="background-preview" id="solid-color-preview" style="background: #121212; cursor: pointer; position: relative;">
+              <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600;">
+                Click to choose
+              </div>
+            </div>
+            <p style="margin: 8px 0 0; font-size: 13px; color: var(--text-color); text-align: center;">Pick Color</p>
+          </div>
+        </div>
+        <input type="color" id="color-picker" style="position: absolute; opacity: 0; pointer-events: none;" value="#121212">
+      </div>
+    </div>
+  </div>
+
+  <script src="theme-loader.js"></script>
+  <script src="history.js"></script>
+</body>
+</html>

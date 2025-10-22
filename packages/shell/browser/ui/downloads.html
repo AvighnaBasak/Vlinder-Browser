@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Downloads</title>
+  <style>
+    :root {
+      /* Local, safe tokens that fallback to theme vars without self-reference */
+      --c-bg: var(--bg-color, #111112);
+      --c-text: var(--text-color, #e5e7eb);
+      --c-surface: var(--tab-color, #232324);
+      --c-input-bg: var(--input-bg, #18181a);
+      --c-border: var(--input-border, #333335);
+      --c-focus: var(--input-focus, #444448);
+
+      --radius-xl: 18px;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 10px 28px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; }
+    html, body { overflow-x: hidden; }
+    body {
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+      background: radial-gradient(1200px 800px at 10% -10%, color-mix(in srgb, var(--c-surface) 35%, #000 65%), var(--c-bg)) fixed;
+      color: var(--c-text);
+      margin: 0;
+      display: flex;
+      height: 100vh;
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--input-border);
+      padding: 1rem 0;
+      flex-shrink: 0;
+    }
+    .sidebar-item {
+      display: block;
+      padding: 12px 20px;
+      color: var(--text-color);
+      text-decoration: none;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      transform: translateX(0);
+      position: relative;
+      overflow: hidden;
+    }
+    .sidebar-item.active {
+      background: var(--input-focus);
+      border-right: 2px solid #4dabf7;
+      transform: translateX(4px);
+      box-shadow: 2px 0 8px rgba(77, 171, 247, 0.2);
+    }
+    .main-content { flex: 1; padding: 20px 24px; overflow-y: auto; overflow-x: hidden; }
+    h1 { margin: 0 0 16px; font-size: 22px; font-weight: 650; letter-spacing: .2px; }
+
+    .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--c-surface); padding: 12px; border: 1px solid var(--c-border); border-radius: var(--radius-xl); box-shadow: var(--shadow); margin-bottom: 12px; }
+    #download-url { flex: 1; min-width: 260px; height: 44px; border-radius: var(--radius); border: 1px solid var(--c-border); background: var(--c-input-bg); color: var(--c-text); padding: 0 14px; outline: none; font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 14px; }
+    #download-url:focus { border-color: var(--c-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-focus) 25%, transparent); }
+
+    .controls button { padding: 10px 14px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); color: var(--c-text); cursor: pointer; font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace; font-weight: 600; font-size: 14px; transition: border-color .15s ease, background .15s ease, transform .1s ease; }
+    .controls button:hover { border-color: var(--c-focus); background: color-mix(in srgb, var(--c-surface) 80%, #000 20%); }
+    .controls button:active { transform: scale(0.98); }
+
+    #downloads-list { list-style: none; padding: 0; margin: 0; }
+    .downloads-item { display: grid; grid-template-columns: 18px 1fr auto auto auto auto; gap: 12px; align-items: center; margin: 8px 0; padding: 12px 14px; border-radius: var(--radius-xl); background: var(--c-surface); border: 1px solid var(--c-border); transition: transform .15s ease, border-color .15s ease, background .15s ease; }
+    .downloads-item:hover { border-color: var(--c-focus); background: color-mix(in srgb, var(--c-surface) 80%, #000 20%); transform: translateY(-1px); }
+
+    .filename { color: color-mix(in srgb, var(--c-focus) 65%, var(--c-text) 35%); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .downloads-time { opacity: .8; font-size: 13px; white-space: nowrap; }
+
+    .progress-bar { width: 180px; height: 10px; background: color-mix(in srgb, var(--c-input-bg) 70%, #000 30%); border-radius: 6px; overflow: hidden; position: relative; }
+    .progress { height: 100%; background: color-mix(in srgb, var(--c-focus) 70%, #9fd3ff 30%); border-radius: 6px; transition: width .2s; }
+
+    .downloads-item button { 
+      padding: 8px 12px !important; 
+      font-size: 12px !important; 
+      border-radius: var(--radius); 
+      border: 1px solid var(--c-border); 
+      background: var(--c-input-bg); 
+      color: var(--c-text); 
+      cursor: pointer; 
+      font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace; 
+      font-weight: 600; 
+      transition: background .15s, border-color .15s; 
+      white-space: nowrap;
+    }
+    .downloads-item button:hover { background: color-mix(in srgb, var(--c-input-bg) 70%, #000 30%); border-color: var(--c-focus); }
+
+    /* Custom checkbox styling in downloads list */
+    .downloads-item input[type="checkbox"] { 
+      appearance: none; -webkit-appearance: none; 
+      margin: 0 !important; 
+      padding: 0 !important;
+      width: 18px !important; 
+      height: 18px !important; 
+      border-radius: 6px; 
+      border: 1px solid var(--c-border); 
+      background: var(--c-input-bg); 
+      display: grid; 
+      place-content: center;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+    }
+    .downloads-item input[type="checkbox"]:hover { border-color: var(--c-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-focus) 20%, transparent); }
+    .downloads-item input[type="checkbox"]:checked { background: color-mix(in srgb, var(--c-focus) 70%, #9fd3ff 30%); border-color: var(--c-focus); }
+    .downloads-item input[type="checkbox"]:checked::after { content: ''; width: 10px; height: 10px; border-radius: 3px; background: #0a1422; display: block; }
+
+    .empty-state { text-align: center; opacity: .7; margin-top: 32px; font-size: 14px; }
+
+    /* Scrollbar styling */
+    .main-content, #downloads-list {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in srgb, var(--c-focus) 35%, var(--c-surface) 65%) var(--c-surface);
+    }
+    .main-content::-webkit-scrollbar, #downloads-list::-webkit-scrollbar { width: 10px; height: 10px; }
+    .main-content::-webkit-scrollbar-track, #downloads-list::-webkit-scrollbar-track { background: var(--c-surface); border-radius: 8px; }
+    .main-content::-webkit-scrollbar-thumb, #downloads-list::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--c-focus) 35%, var(--c-surface) 65%); border: 2px solid var(--c-surface); border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="main-content">
+    <h1>Downloads</h1>
+    <div class="controls">
+      <input id="download-url" placeholder="Paste URL to download" style="width:60%" />
+      <button id="start-download">Download</button>
+      <button id="clear-downloads">Clear All</button>
+      <button id="delete-selected">Delete Selected</button>
+    </div>
+    <ul id="downloads-list"></ul>
+    <div id="empty-state" class="empty-state" style="display: none;">
+      No downloads found.
+    </div>
+  </div>
+  <script src="theme-loader.js"></script>
+  <script src="downloads.js"></script>
+</body>
+</html>

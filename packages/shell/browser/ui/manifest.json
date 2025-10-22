@@ -2,8 +2,36 @@
   "name": "WebUI",
   "version": "1.0.0",
   "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
   "permissions": [],
-  "chrome_url_overrides": {
-    "newtab": "new-tab.html"
-  }
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "history.html",
+        "history.js",
+        "history-data.json",
+        "downloads.html",
+        "downloads.js",
+        "downloads-data.json",
+        "bookmarks.html",
+        "bookmarks.js",
+        "bookmarks-data.json",
+        "new-tab.html",
+        "new-tab.js",
+        "search.png",
+        "dns-error.html",
+        "no-internet.html",
+        "dnserror.png",
+        "selected-star.png",
+        "unselected-star.png",
+        "theme-loader.js",
+        "current-theme.json",
+        "background-settings.json",
+        "backgrounds/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

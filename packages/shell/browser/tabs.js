@@ -6,6 +6,8 @@ const toolbarHeight = 64
 class Tab {
   constructor(parentWindow, wcvOpts = {}) {
     this.invalidateLayout = this.invalidateLayout.bind(this)
+    this.extraTop = 0
+    this.aiPanelWidth = 0
 
     // Delete undefined properties which cause WebContentsView constructor to
     // throw. This should probably be fixed in Electron upstream.
@@ -18,6 +20,52 @@ class Tab {
     this.window = parentWindow
     this.webContents = this.view.webContents
     this.window.contentView.addChildView(this.view)
+
+    // Track fullscreen state explicitly; some environments delay isFullScreen()
+    this._isFullscreen = !!this.window?.isFullScreen?.()
+    this._isMaximized = !!this.window?.isMaximized?.()
+    this._onEnterFs = () => {
+      this._isFullscreen = true
+      this.invalidateLayout()
+    }
+    this._onLeaveFs = () => {
+      this._isFullscreen = false
+      this.invalidateLayout()
+    }
+    this._onMaximize = () => {
+      this._isMaximized = true
+      this.invalidateLayout()
+    }
+    this._onUnmaximize = () => {
+      this._isMaximized = false
+      this.invalidateLayout()
+    }
+    this.window.on('enter-full-screen', this._onEnterFs)
+    this.window.on('leave-full-screen', this._onLeaveFs)
+    this.window.on('maximize', this._onMaximize)
+    this.window.on('unmaximize', this._onUnmaximize)
+  }
+
+  setExtraTop(pixels) {
+    const n = Math.max(0, Number(pixels) || 0)
+    if (this.extraTop !== n) {
+      this.extraTop = n
+      this.invalidateLayout()
+    }
+  }
+
+  setAIPanelWidth(pixels) {
+    const n = Math.max(0, Number(pixels) || 0)
+    console.log(
+      `Tab ${this.id}: setAIPanelWidth called with ${pixels}, setting to ${n}, current: ${this.aiPanelWidth}`,
+    )
+    if (this.aiPanelWidth !== n) {
+      this.aiPanelWidth = n
+      console.log(`Tab ${this.id}: aiPanelWidth changed, calling invalidateLayout`)
+      this.invalidateLayout()
+    } else {
+      console.log(`Tab ${this.id}: aiPanelWidth unchanged, skipping layout`)
+    }
   }
 
   destroy() {
@@ -26,6 +74,20 @@ class Tab {
     this.destroyed = true
 
     this.hide()
+
+    // Remove fullscreen listeners
+    try {
+      this.window.off('enter-full-screen', this._onEnterFs)
+    } catch {}
+    try {
+      this.window.off('leave-full-screen', this._onLeaveFs)
+    } catch {}
+    try {
+      this.window.off('maximize', this._onMaximize)
+    } catch {}
+    try {
+      this.window.off('unmaximize', this._onUnmaximize)
+    } catch {}
 
     this.window.contentView.removeChildView(this.view)
     this.window = undefined
@@ -66,13 +128,27 @@ class Tab {
 
   invalidateLayout() {
     const [width, height] = this.window.getSize()
-    const padding = 4
-    this.view.setBounds({
+    const padding = 8
+    // Compute current state defensively in case events lag
+    const isFs =
+      typeof this.window.isFullScreen === 'function'
+        ? this.window.isFullScreen()
+        : this._isFullscreen
+    const isMax =
+      typeof this.window.isMaximized === 'function' ? this.window.isMaximized() : this._isMaximized
+    const padMult = isFs || isMax ? 4 : 2
+    const heightPadMult = isFs || isMax ? 3 : 1
+    const bounds = {
       x: padding,
-      y: toolbarHeight,
-      width: width - padding * 2,
-      height: height - toolbarHeight - padding,
-    })
+      y: toolbarHeight + this.extraTop,
+      width: width - padding * padMult - this.aiPanelWidth,
+      height: height - (toolbarHeight + this.extraTop) - padding * heightPadMult,
+    }
+    console.log(
+      `Tab ${this.id} invalidateLayout: window=${width}x${height}, aiPanelWidth=${this.aiPanelWidth}, setting bounds:`,
+      bounds,
+    )
+    this.view.setBounds(bounds)
     this.view.setBorderRadius(8)
   }
 
@@ -93,6 +169,15 @@ class Tabs extends EventEmitter {
   constructor(browserWindow) {
     super()
     this.window = browserWindow
+  }
+
+  setExtraTop(pixels) {
+    this.tabList.forEach((tab) => tab.setExtraTop(pixels))
+  }
+
+  setAIPanelWidth(pixels) {
+    console.log(`Tabs.setAIPanelWidth called with ${pixels}, updating ${this.tabList.length} tabs`)
+    this.tabList.forEach((tab) => tab.setAIPanelWidth(pixels))
   }
 
   destroy() {

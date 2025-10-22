@@ -1,10 +1,42 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+out/
+.webpack/
+*.js.map
+
+# User data (should not be committed)
+packages/shell/browser/ui/bookmarks-data.json
+packages/shell/browser/ui/history-data.json
+packages/shell/browser/ui/downloads-data.json
+packages/shell/browser/ui/current-theme.json
+packages/shell/browser/ui/background-settings.json
+
+# Extensions (user installed)
 extensions/*
 !extensions/.gitkeep
 !extensions/README.md
 
-disabled/
-node_modules
-
-noncompliant.txt
+# Logs and temporary files
+*.log
 yarn-error.log
+npm-debug.log*
+lerna-debug.log*
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Misc
+disabled/
+noncompliant.txt
