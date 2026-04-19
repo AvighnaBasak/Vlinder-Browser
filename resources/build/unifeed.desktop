@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Lux
+Comment=Unified feed for all your social media platforms in one window
+Exec=lux %U
+Icon=lux
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/vnd.mozilla.xul+xml;application/rss+xml;application/rdf+xml;image/svg+xml;text/plain;application/x-extension-htm;application/x-extension-html;application/x-extension-shtml;application/x-extension-xht;application/x-extension-xhtml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+StartupWMClass=Lux

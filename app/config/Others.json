@@ -1,0 +1,910 @@
+
+{
+    "id": "viber",
+    "name": "Viber",
+    "url": "https://www.viber.com/",
+    "icon": "Phone",
+    "logoUrl": "https://cdn.simpleicons.org/viber",
+    "category": "messaging",
+    "description": "Free calls and messages to anyone, anywhere",
+    "rating": 4.3,
+    "downloads": "820M+",
+    "gradient": "from-purple-600 to-purple-800",
+    "features": [
+        "Voice calls",
+        "Video calls",
+        "Group chats"
+    ]
+},
+{
+    "id": "line",
+    "name": "LINE",
+    "url": "https://line.me/",
+    "icon": "MessageSquare",
+    "logoUrl": "https://cdn.simpleicons.org/line",
+    "category": "messaging",
+    "description": "Popular messaging app in Asia with stickers and games",
+    "rating": 4.4,
+    "downloads": "178M+",
+    "gradient": "from-green-500 to-green-700",
+    "features": [
+        "Stickers",
+        "Timeline",
+        "Mini apps"
+    ]
+},
+{
+    "id": "qq",
+    "name": "QQ",
+    "url": "https://im.qq.com/",
+    "icon": "MessageCircle",
+    "logoUrl": "https://cdn.simpleicons.org/qq",
+    "category": "messaging",
+    "description": "China's popular instant messaging platform",
+    "rating": 4.2,
+    "downloads": "524M+",
+    "gradient": "from-blue-500 to-cyan-500",
+    "features": [
+        "Instant messaging",
+        "Social network",
+        "Gaming"
+    ]
+},
+
+{
+    "id": "bluesky",
+    "name": "Bluesky",
+    "url": "https://bsky.app/",
+    "icon": "Cloud",
+    "logoUrl": "https://svgl.app/library/bluesky.svg",
+    "category": "social",
+    "description": "Decentralized social network for open conversations",
+    "rating": 4.3,
+    "downloads": "10M+",
+    "gradient": "from-sky-400 to-blue-600",
+    "features": [
+        "Decentralized",
+        "Open protocol",
+        "Custom feeds"
+    ]
+},
+{
+    "id": "mastodon",
+    "name": "Mastodon",
+    "url": "https://joinmastodon.org/",
+    "icon": "Network",
+    "logoUrl": "https://svgl.app/library/mastodon.svg",
+    "category": "social",
+    "description": "Decentralized, open-source social network",
+    "rating": 4.2,
+    "downloads": "8M+",
+    "gradient": "from-purple-600 to-blue-600",
+    "features": [
+        "Decentralized",
+        "No ads",
+        "Community-owned"
+    ]
+},
+{
+    "id": "trello",
+    "name": "Trello",
+    "url": "https://trello.com/",
+    "icon": "Kanban",
+    "logoUrl": "https://cdn.simpleicons.org/trello",
+    "category": "productivity",
+    "description": "Visual project management with boards, lists, and cards",
+    "rating": 4.5,
+    "downloads": "50M+",
+    "gradient": "from-blue-500 to-blue-700",
+    "features": [
+        "Kanban boards",
+        "Team collaboration",
+        "Power-Ups"
+    ]
+},
+{
+    "id": "asana",
+    "name": "Asana",
+    "url": "https://app.asana.com/",
+    "icon": "CheckCircle",
+    "logoUrl": "https://svgl.app/library/asana-logo.svg",
+    "category": "productivity",
+    "description": "Work management platform for teams to stay focused on goals",
+    "rating": 4.4,
+    "downloads": "30M+",
+    "gradient": "from-pink-500 to-rose-600",
+    "features": [
+        "Task management",
+        "Timeline view",
+        "Workflow automation"
+    ]
+},
+{
+    "id": "airtable",
+    "name": "Airtable",
+    "url": "https://airtable.com/",
+    "icon": "Table",
+    "logoUrl": "https://svgl.app/library/airtable.svg",
+    "category": "productivity",
+    "description": "Spreadsheet-database hybrid for building custom workflows",
+    "rating": 4.6,
+    "downloads": "20M+",
+    "gradient": "from-yellow-500 to-orange-600",
+    "features": [
+        "Custom databases",
+        "Rich field types",
+        "API access"
+    ]
+},
+{
+    "id": "evernote",
+    "name": "Evernote",
+    "url": "https://www.evernote.com/",
+    "icon": "FileText",
+    "logoUrl": "https://svgl.app/library/evernote.svg",
+    "category": "productivity",
+    "description": "Note-taking and organization app for capturing ideas",
+    "rating": 4.3,
+    "downloads": "200M+",
+    "gradient": "from-green-600 to-emerald-700",
+    "features": [
+        "Note organization",
+        "Web clipper",
+        "Document scanning"
+    ]
+},
+
+{
+    "id": "medium",
+    "name": "Medium",
+    "url": "https://medium.com/",
+    "icon": "BookOpen",
+    "logoUrl": "https://cdn.simpleicons.org/medium",
+    "category": "social",
+    "description": "Platform for reading and writing long-form articles",
+    "rating": 4.4,
+    "downloads": "81M+",
+    "gradient": "from-gray-800 to-black",
+    "features": [
+        "Articles",
+        "Publications",
+        "Member-only content"
+    ]
+},
+{
+    "id": "quora",
+    "name": "Quora",
+    "url": "https://www.quora.com/",
+    "icon": "HelpCircle",
+    "logoUrl": "https://cdn.simpleicons.org/quora",
+    "category": "social",
+    "description": "Q&A platform where people share knowledge and insights",
+    "rating": 4.3,
+    "downloads": "400M+",
+    "gradient": "from-red-600 to-red-800",
+    "features": [
+        "Q&A format",
+        "Expert answers",
+        "Topic feeds"
+    ]
+},
+
+{
+    "id": "vk",
+    "name": "VK",
+    "url": "https://vk.com/",
+    "icon": "Users",
+    "logoUrl": "https://svgl.app/library/vk.svg",
+    "category": "social",
+    "description": "Russia's largest social network and entertainment platform",
+    "rating": 4.2,
+    "downloads": "88M+",
+    "gradient": "from-blue-600 to-blue-900",
+    "features": [
+        "Social network",
+        "Music streaming",
+        "Groups"
+    ]
+},
+{
+    "id": "weibo",
+    "name": "Weibo",
+    "url": "https://weibo.com/",
+    "icon": "MessageCircle",
+    "logoUrl": "https://svgl.app/library/sina-weibo.svg",
+    "category": "social",
+    "description": "China's Twitter-like microblogging platform",
+    "rating": 4.3,
+    "downloads": "590M+",
+    "gradient": "from-red-500 to-orange-500",
+    "features": [
+        "Microblogging",
+        "Live streaming",
+        "Trending topics"
+    ]
+},
+
+{
+    "id": "monday",
+    "name": "Monday.com",
+    "url": "https://monday.com/",
+    "icon": "Calendar",
+    "logoUrl": "https://svgl.app/library/monday.svg",
+    "category": "productivity",
+    "description": "Work operating system for team collaboration and projects",
+    "rating": 4.6,
+    "downloads": "25M+",
+    "gradient": "from-pink-500 to-red-500",
+    "features": [
+        "Project boards",
+        "Automation",
+        "Integrations"
+    ]
+},
+{
+    "id": "clickup",
+    "name": "ClickUp",
+    "url": "https://clickup.com/",
+    "icon": "CheckSquare",
+    "logoUrl": "https://cdn.simpleicons.org/clickup",
+    "category": "productivity",
+    "description": "All-in-one productivity platform for teams",
+    "rating": 4.7,
+    "downloads": "20M+",
+    "gradient": "from-purple-500 to-pink-600",
+    "features": [
+        "Tasks",
+        "Docs",
+        "Goals"
+    ]
+},
+{
+    "id": "miro",
+    "name": "Miro",
+    "url": "https://miro.com/",
+    "icon": "Layout",
+    "logoUrl": "https://cdn.simpleicons.org/miro",
+    "category": "productivity",
+    "description": "Online collaborative whiteboard platform for teams",
+    "rating": 4.7,
+    "downloads": "40M+",
+    "gradient": "from-yellow-400 to-yellow-600",
+    "features": [
+        "Whiteboard",
+        "Templates",
+        "Real-time collaboration"
+    ]
+},
+{
+    "id": "todoist",
+    "name": "Todoist",
+    "url": "https://todoist.com/",
+    "icon": "ListTodo",
+    "logoUrl": "https://svgl.app/library/todoist.svg",
+    "category": "productivity",
+    "description": "Task manager and to-do list app for organization",
+    "rating": 4.6,
+    "downloads": "30M+",
+    "gradient": "from-red-500 to-red-700",
+    "features": [
+        "Task management",
+        "Projects",
+        "Productivity tracking"
+    ]
+},
+{
+    "id": "onepassword",
+    "name": "1Password",
+    "url": "https://1password.com/",
+    "icon": "KeyRound",
+    "logoUrl": "https://svgl.app/library/1password-dark.svg",
+    "category": "productivity",
+    "description": "Password manager for securing your digital life",
+    "rating": 4.7,
+    "downloads": "15M+",
+    "gradient": "from-blue-600 to-blue-800",
+    "features": [
+        "Password vault",
+        "Auto-fill",
+        "Security alerts"
+    ]
+},
+{
+    "id": "grammarly",
+    "name": "Grammarly",
+    "url": "https://www.grammarly.com/",
+    "icon": "Pen",
+    "logoUrl": "https://cdn.simpleicons.org/grammarly",
+    "category": "productivity",
+    "description": "AI-powered writing assistant for better communication",
+    "rating": 4.5,
+    "downloads": "50M+",
+    "gradient": "from-green-500 to-teal-600",
+    "features": [
+        "Grammar checking",
+        "Style suggestions",
+        "Plagiarism detection"
+    ]
+},
+{
+    "id": "calendly",
+    "name": "Calendly",
+    "url": "https://calendly.com/",
+    "icon": "CalendarCheck",
+    "logoUrl": "https://svgl.app/library/calendly.svg",
+    "category": "productivity",
+    "description": "Scheduling automation platform for meetings",
+    "rating": 4.7,
+    "downloads": "20M+",
+    "gradient": "from-blue-500 to-cyan-500",
+    "features": [
+        "Meeting scheduling",
+        "Calendar sync",
+        "Automated reminders"
+    ]
+},
+{
+    "id": "paypal",
+    "name": "PayPal",
+    "url": "https://www.paypal.com/",
+    "icon": "DollarSign",
+    "logoUrl": "https://svgl.app/library/paypal.svg",
+    "category": "finance",
+    "description": "Digital payment platform for online transactions",
+    "rating": 4.5,
+    "downloads": "500M+",
+    "gradient": "from-blue-600 to-blue-800",
+    "features": [
+        "Online payments",
+        "Money transfer",
+        "Buyer protection"
+    ]
+},
+
+    {
+        "id": "soundcloud",
+        "name": "SoundCloud",
+        "url": "https://soundcloud.com/",
+        "icon": "Radio",
+        "logoUrl": "https://svgl.app/library/soundcloud-logo_dark.svg",
+        "category": "entertainment",
+        "description": "Discover and stream music from emerging and established artists",
+        "rating": 4.4,
+        "downloads": "300M+",
+        "gradient": "from-orange-500 to-orange-700",
+        "features": [
+            "Independent artists",
+            "Podcasts",
+            "Music discovery"
+        ]
+    },
+{
+    "id": "notion-calendar",
+    "name": "Notion Calendar",
+    "url": "https://www.notion.so/product/calendar",
+    "icon": "CalendarDays",
+    "logoUrl": "https://svgl.app/library/notion.svg",
+    "category": "productivity",
+    "description": "Smart calendar app integrated with Notion workspace",
+    "rating": 4.7,
+    "downloads": "10M+",
+    "gradient": "from-gray-700 to-gray-900",
+    "features": [
+        "Calendar integration",
+        "Task scheduling",
+        "Notion sync"
+    ]
+},
+{
+    "id": "atlassian",
+    "name": "Jira",
+    "url": "https://www.atlassian.com/software/jira",
+    "icon": "ListChecks",
+    "logoUrl": "https://cdn.simpleicons.org/jira",
+    "category": "productivity",
+    "description": "Project tracking and agile management for software teams",
+    "rating": 4.4,
+    "downloads": "50M+",
+    "gradient": "from-blue-600 to-blue-800",
+    "features": [
+        "Issue tracking",
+        "Agile boards",
+        "Sprint planning"
+    ]
+}
+
+{
+    "id": "stackoverflow",
+    "name": "Stack Overflow",
+    "url": "https://stackoverflow.com/",
+    "icon": "Code",
+    "logoUrl": "https://svgl.app/library/stackoverflow.svg",
+    "category": "development",
+    "description": "Q&A community for developers and programmers",
+    "rating": 4.7,
+    "downloads": "100M+",
+    "gradient": "from-orange-500 to-orange-700",
+    "features": [
+        "Q&A platform",
+        "Code snippets",
+        "Developer community"
+    ]
+},
+{
+    "id": "replit",
+    "name": "Replit",
+    "url": "https://replit.com/",
+    "icon": "Terminal",
+    "logoUrl": "https://svgl.app/library/replit.svg",
+    "category": "development",
+    "description": "Collaborative browser-based IDE for coding in any language",
+    "rating": 4.5,
+    "downloads": "20M+",
+    "gradient": "from-orange-500 to-red-600",
+    "features": [
+        "Online IDE",
+        "Real-time collaboration",
+        "Instant deployment"
+    ]
+},
+{
+    "id": "vscode",
+    "name": "VS Code",
+    "url": "https://vscode.dev/",
+    "icon": "Code",
+    "logoUrl": "https://svgl.app/library/vscode.svg",
+    "category": "development",
+    "description": "Powerful code editor for web and cloud development",
+    "rating": 4.9,
+    "downloads": "40M+",
+    "gradient": "from-blue-600 to-blue-800",
+    "features": [
+        "IntelliSense",
+        "Extensions",
+        "Git integration"
+    ]
+},
+{
+    "id": "codepen",
+    "name": "CodePen",
+    "url": "https://codepen.io/",
+    "icon": "Code",
+    "logoUrl": "https://cdn.simpleicons.org/codepen",
+    "category": "development",
+    "description": "Social development environment for front-end code",
+    "rating": 4.7,
+    "downloads": "15M+",
+    "gradient": "from-gray-800 to-black",
+    "features": [
+        "Live preview",
+        "Code sharing",
+        "Community"
+    ]
+},
+{
+    "id": "webex",
+    "name": "Webex",
+    "url": "https://www.webex.com/",
+    "icon": "Video",
+    "logoUrl": "https://cdn.simpleicons.org/webex",
+    "category": "video",
+    "description": "Video conferencing and online meeting platform",
+    "rating": 4.3,
+    "downloads": "100M+",
+    "gradient": "from-green-600 to-teal-700",
+    "features": [
+        "Video meetings",
+        "Screen sharing",
+        "Recording"
+    ]
+},
+{
+    "id": "skype",
+    "name": "Skype",
+    "url": "https://www.skype.com/",
+    "icon": "Phone",
+    "logoUrl": "https://svgl.app/library/skype.svg",
+    "category": "video",
+    "description": "Video calls and messaging for staying connected",
+    "rating": 4.2,
+    "downloads": "1B+",
+    "gradient": "from-blue-500 to-blue-700",
+    "features": [
+        "Video calls",
+        "Phone calls",
+        "Screen sharing"
+    ]
+},
+{
+    "id": "midjourney",
+    "name": "Midjourney",
+    "url": "https://www.midjourney.com/",
+    "icon": "Image",
+    "logoUrl": "https://svgl.app/library/midjourney.svg",
+    "category": "ai",
+    "description": "AI-powered image generation from text descriptions",
+    "rating": 4.8,
+    "downloads": "20M+",
+    "gradient": "from-purple-600 to-indigo-700",
+    "features": [
+        "Image generation",
+        "Art styles",
+        "High resolution"
+    ]
+},
+{
+    "id": "huggingface",
+    "name": "Hugging Face",
+    "url": "https://huggingface.co/",
+    "icon": "Brain",
+    "logoUrl": "https://svgl.app/library/hugging_face.svg",
+    "category": "ai",
+    "description": "Platform for AI models, datasets, and machine learning tools",
+    "rating": 4.6,
+    "downloads": "10M+",
+    "gradient": "from-yellow-400 to-orange-500",
+    "features": [
+        "Model hub",
+        "Datasets",
+        "Transformers"
+    ]
+},
+{
+    "id": "characterai",
+    "name": "Character.AI",
+    "url": "https://character.ai/",
+    "icon": "UserCircle",
+    "logoUrl": "https://svgl.app/library/character-ai.svg",
+    "category": "ai",
+    "description": "Chat with AI characters and create your own personalities",
+    "rating": 4.3,
+    "downloads": "25M+",
+    "gradient": "from-purple-500 to-violet-600",
+    "features": [
+        "Custom characters",
+        "Roleplay conversations",
+        "Community creations"
+    ]
+},
+{
+    "id": "runway",
+    "name": "Runway",
+    "url": "https://runwayml.com/",
+    "icon": "Film",
+    "logoUrl": "https://svgl.app/library/runway.svg",
+    "category": "ai",
+    "description": "AI-powered video editing and generation tools",
+    "rating": 4.6,
+    "downloads": "5M+",
+    "gradient": "from-green-500 to-teal-600",
+    "features": [
+        "Video generation",
+        "AI editing",
+        "Creative tools"
+    ]
+},
+{
+    "id": "adobe",
+    "name": "Adobe Creative Cloud",
+    "url": "https://www.adobe.com/",
+    "icon": "Layers",
+    "logoUrl": "https://svgl.app/library/adobe.svg",
+    "category": "design",
+    "description": "Professional creative suite for design, video, and photography",
+    "rating": 4.6,
+    "downloads": "30M+",
+    "gradient": "from-red-600 to-red-800",
+    "features": [
+        "Photoshop",
+        "Illustrator",
+        "Creative suite"
+    ]
+},
+
+{
+    "id": "roblox",
+    "name": "Roblox",
+    "url": "https://www.roblox.com/",
+    "icon": "Box",
+    "logoUrl": "https://cdn.simpleicons.org/roblox",
+    "category": "gaming",
+    "description": "Platform for playing and creating user-generated games",
+    "rating": 4.5,
+    "downloads": "300M+",
+    "gradient": "from-red-500 to-gray-800",
+    "features": [
+        "User games",
+        "Avatar customization",
+        "Social gaming"
+    ]
+},
+{
+    "id": "minecraft",
+    "name": "Minecraft",
+    "url": "https://www.minecraft.net/",
+    "icon": "Grid3x3",
+    "logoUrl": "https://cdn.simpleicons.org/minecraft",
+    "category": "gaming",
+    "description": "Sandbox game for building and exploring block worlds",
+    "rating": 4.8,
+    "downloads": "500M+",
+    "gradient": "from-green-600 to-green-800",
+    "features": [
+        "Creative mode",
+        "Survival mode",
+        "Multiplayer"
+    ]
+},
+{
+    "id": "playstation",
+    "name": "PlayStation",
+    "url": "https://www.playstation.com/",
+    "icon": "Gamepad2",
+    "logoUrl": "https://svgl.app/library/playstation.svg",
+    "category": "gaming",
+    "description": "Sony's gaming platform and PlayStation Network",
+    "rating": 4.6,
+    "downloads": "100M+",
+    "gradient": "from-blue-600 to-blue-900",
+    "features": [
+        "PS Plus",
+        "Game library",
+        "Online gaming"
+    ]
+},
+{
+    "id": "xbox",
+    "name": "Xbox",
+    "url": "https://www.xbox.com/",
+    "icon": "Gamepad",
+    "logoUrl": "https://svgl.app/library/xbox.svg",
+    "category": "gaming",
+    "description": "Microsoft's gaming platform with Game Pass",
+    "rating": 4.6,
+    "downloads": "90M+",
+    "gradient": "from-green-500 to-green-700",
+    "features": [
+        "Game Pass",
+        "Cloud gaming",
+        "Xbox Live"
+    ]
+},
+
+{
+    "id": "venmo",
+    "name": "Venmo",
+    "url": "https://venmo.com/",
+    "icon": "CreditCard",
+    "logoUrl": "https://cdn.simpleicons.org/venmo",
+    "category": "finance",
+    "description": "Social payment app for splitting bills and sending money",
+    "rating": 4.4,
+    "downloads": "80M+",
+    "gradient": "from-blue-500 to-sky-500",
+    "features": [
+        "Split payments",
+        "Social feed",
+        "Instant transfer"
+    ]
+},
+{
+    "id": "revolut",
+    "name": "Revolut",
+    "url": "https://www.revolut.com/",
+    "icon": "Building2",
+    "logoUrl": "https://cdn.simpleicons.org/revolut",
+    "category": "finance",
+    "description": "Digital banking app with global money management",
+    "rating": 4.6,
+    "downloads": "40M+",
+    "gradient": "from-blue-700 to-purple-700",
+    "features": [
+        "Multi-currency",
+        "Crypto exchange",
+        "Budget tools"
+    ]
+},
+{
+    "id": "khan",
+    "name": "Khan Academy",
+    "url": "https://www.khanacademy.org/",
+    "icon": "GraduationCap",
+    "logoUrl": "https://cdn.simpleicons.org/khanacademy",
+    "category": "education",
+    "description": "Free online courses and educational resources",
+    "rating": 4.8,
+    "downloads": "100M+",
+    "gradient": "from-teal-500 to-teal-700",
+    "features": [
+        "Free courses",
+        "Video lessons",
+        "Practice exercises"
+    ]
+},
+{
+    "id": "wechat",
+    "name": "WeChat",
+    "url": "https://web.wechat.com/",
+    "icon": "MessageCircle",
+    "logoUrl": "https://cdn.simpleicons.org/wechat",
+    "category": "messaging",
+    "description": "China's super-app for messaging, payments, and social networking",
+    "rating": 4.6,
+    "downloads": "1.3B+",
+    "gradient": "from-green-600 to-green-800",
+    "features": [
+        "Payments",
+        "Mini programs",
+        "Social network"
+    ]
+},
+{
+    "id": "hbo",
+    "name": "Max (HBO)",
+    "url": "https://www.max.com/",
+    "icon": "Film",
+    "logoUrl": "https://cdn.simpleicons.org/hbomax",
+    "category": "entertainment",
+    "description": "HBO Max streaming with premium content",
+    "rating": 4.5,
+    "downloads": "80M+",
+    "gradient": "from-purple-700 to-purple-900",
+    "features": [
+        "HBO originals",
+        "Warner Bros",
+        "DC content"
+    ]
+},
+{
+    "id": "poe",
+    "name": "Poe",
+    "url": "https://poe.com/",
+    "icon": "Zap",
+    "logoUrl": "https://cdn.simpleicons.org/poe",
+    "category": "ai",
+    "description": "Access multiple AI chatbots including GPT-4, Claude, and more",
+    "rating": 4.4,
+    "downloads": "15M+",
+    "gradient": "from-red-500 to-rose-600",
+    "features": [
+        "Multiple AI models",
+        "Custom bots",
+        "Fast responses"
+    ]
+},
+{
+    "id": "paramount",
+    "name": "Paramount+",
+    "url": "https://www.paramountplus.com/",
+    "icon": "Mountain",
+    "logoUrl": "https://cdn.simpleicons.org/paramountplus",
+    "category": "entertainment",
+    "description": "Streaming service with CBS, MTV, and Paramount content",
+    "rating": 4.2,
+    "downloads": "60M+",
+    "gradient": "from-blue-600 to-blue-800",
+    "features": [
+        "Live sports",
+        "CBS shows",
+        "Movies"
+    ]
+},
+{
+    "id": "appletv",
+    "name": "Apple TV+",
+    "url": "https://tv.apple.com/",
+    "icon": "Tv",
+    "logoUrl": "https://cdn.simpleicons.org/appletv",
+    "category": "entertainment",
+    "description": "Apple's streaming service with original shows and movies",
+    "rating": 4.6,
+    "downloads": "70M+",
+    "gradient": "from-gray-800 to-black",
+    "features": [
+        "Apple originals",
+        "4K HDR",
+        "Family sharing"
+    ]
+},
+{
+    "id": "coinbase",
+    "name": "Coinbase",
+    "url": "https://www.coinbase.com/",
+    "icon": "Bitcoin",
+    "logoUrl": "https://svgl.app/library/coinbase.svg",
+    "category": "finance",
+    "description": "Cryptocurrency exchange and digital wallet",
+    "rating": 4.3,
+    "downloads": "100M+",
+    "gradient": "from-blue-600 to-blue-900",
+    "features": [
+        "Crypto trading",
+        "Wallet",
+        "Learning rewards"
+    ]
+},
+{
+    "id": "duolingo",
+    "name": "Duolingo",
+    "url": "https://www.duolingo.com/",
+    "icon": "Languages",
+    "logoUrl": "https://cdn.simpleicons.org/duolingo",
+    "category": "education",
+    "description": "Language learning platform with gamified lessons",
+    "rating": 4.7,
+    "downloads": "500M+",
+    "gradient": "from-green-500 to-emerald-600",
+    "features": [
+        "40+ languages",
+        "Gamification",
+        "Personalized learning"
+    ]
+},
+{
+    "id": "hulu",
+    "name": "Hulu",
+    "url": "https://www.hulu.com/",
+    "icon": "Tv",
+    "logoUrl": "https://svgl.app/library/hulu-dark.svg",
+    "category": "entertainment",
+    "description": "Streaming service for TV shows, movies, and originals",
+    "rating": 4.4,
+    "downloads": "100M+",
+    "gradient": "from-green-500 to-green-700",
+    "features": [
+        "Live TV",
+        "Original content",
+        "Next-day episodes"
+    ]
+},
+{
+    "id": "disneyplus",
+    "name": "Disney+",
+    "url": "https://www.disneyplus.com/",
+    "icon": "Sparkles",
+    "logoUrl": "https://svgl.app/library/disneyplus.svg",
+    "category": "entertainment",
+    "description": "Stream Disney, Pixar, Marvel, Star Wars, and National Geographic",
+    "rating": 4.6,
+    "downloads": "300M+",
+    "gradient": "from-blue-600 to-blue-800",
+    "features": [
+        "Disney classics",
+        "Marvel universe",
+        "Star Wars content"
+    ]
+},
+{
+    "id": "snapchat",
+    "name": "Snapchat",
+    "url": "https://web.snapchat.com/",
+    "icon": "Camera",
+    "logoUrl": "/assets/platform-icons/snapchat.svg",
+    "category": "social",
+    "description": "Share moments with friends through photos and videos that disappear",
+    "rating": 4.3,
+    "downloads": "850M+",
+    "gradient": "from-yellow-300 to-yellow-500",
+    "features": [
+        "Snap Map",
+        "AR filters",
+        "Stories"
+    ]
+},
+{
+    "id": "google",
+    "name": "Google",
+    "url": "https://www.google.com/",
+    "icon": "Search",
+    "logoUrl": "/assets/platform-icons/google.svg",
+    "category": "productivity",
+    "description": "Search the web for information and answers",
+    "rating": 4.8,
+    "downloads": "1B+",
+    "gradient": "from-blue-500 to-blue-600",
+    "features": [
+        "Search",
+        "Images",
+        "News"
+    ]
+},
