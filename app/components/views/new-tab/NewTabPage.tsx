@@ -125,12 +125,12 @@ export function NewTabPage({ onNavigate }: NewTabPageProps) {
   )
 
   if (!mounted) {
-    return <div className="min-h-screen bg-[#1a1a1a]"></div>
+    return <div className="min-h-screen" style={{ background: 'var(--background, #1a1a1a)' }}></div>
   }
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center min-h-screen text-gray-300 p-4 md:p-8 transition-colors duration-300 select-none overflow-auto"
-      style={{ background: '#1a1a1a' }}
+      style={{ background: 'var(--background, #1a1a1a)' }}
     >
       <div className="flex flex-col items-center justify-center w-full max-w-lg">
         {/* Vlinder Logo */}

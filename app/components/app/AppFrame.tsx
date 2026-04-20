@@ -146,7 +146,7 @@ export default function AppFrame(props: AppFrameProps) {
   } = props
 
   return (
-    <div className="h-full text-foreground bg-[#1a1a1a] text-gray-300">
+    <div className="h-full text-foreground text-gray-300" style={{ backgroundColor: 'var(--theme-chrome, #1a1a1a)' }}>
       <div
         className={`flex z-10 overflow-hidden h-full gap-0 ${sidebarPos === 'right' ? 'flex-row-reverse' : ''}`}
       >

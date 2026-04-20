@@ -18,7 +18,7 @@ export function setDefaultBrowser() {
 
   return new Promise((resolve) => {
     if (process.platform === 'linux' || process.platform.includes('bsd')) {
-      exec('xdg-settings set default-web-browser lux.desktop', (err) => {
+      exec('xdg-settings set default-web-browser vlinder.desktop', (err) => {
         if (err?.message) {
           // xdg-settings failed, but basic protocol registration should still work
           resolve(true) // Still return true as basic registration worked

@@ -5,8 +5,8 @@
 
 export const settingsStyles = `
   .s-panel {
-    background: #0e0e0e;
-    border: 1px solid #1a1a1a;
+    background: var(--theme-surface, #0e0e0e);
+    border: 1px solid var(--theme-border, #1a1a1a);
     border-radius: 4px;
     overflow: hidden;
     font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
@@ -14,7 +14,7 @@ export const settingsStyles = `
 
   .s-panel-header {
     padding: 16px 20px 14px;
-    border-bottom: 1px solid #191919;
+    border-bottom: 1px solid var(--theme-border, #191919);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -27,7 +27,7 @@ export const settingsStyles = `
     align-items: center;
     justify-content: center;
     background: rgba(255,255,255,0.05);
-    border: 1px solid #222;
+    border: 1px solid var(--theme-border, #222);
     border-radius: 3px;
     flex-shrink: 0;
   }
@@ -37,12 +37,12 @@ export const settingsStyles = `
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #c8c8c8;
+    color: var(--theme-text-bright, #c8c8c8);
   }
 
   .s-panel-desc {
     font-size: 10px;
-    color: #404040;
+    color: var(--theme-text-muted, #404040);
     letter-spacing: 0.04em;
     margin-top: 2px;
   }
@@ -72,7 +72,7 @@ export const settingsStyles = `
     left: 16px;
     right: 16px;
     height: 1px;
-    background: #141414;
+    background: var(--theme-border, #141414);
   }
 
   .s-row:last-child::after {
@@ -120,8 +120,8 @@ export const settingsStyles = `
   .s-toggle-track {
     position: absolute;
     inset: 0;
-    background: #1a1a1a;
-    border: 1px solid #262626;
+    background: var(--theme-chrome, #1a1a1a);
+    border: 1px solid var(--theme-border2, #262626);
     border-radius: 10px;
     transition: all 0.2s ease;
   }
@@ -151,9 +151,9 @@ export const settingsStyles = `
   .s-seg-group {
     display: flex;
     gap: 2px;
-    background: #111;
+    background: var(--theme-surface2, #111);
     padding: 2px;
-    border: 1px solid #1f1f1f;
+    border: 1px solid var(--theme-border, #1f1f1f);
     border-radius: 3px;
   }
 
@@ -328,8 +328,8 @@ export const settingsStyles = `
   }
 
   .s-info-box {
-    background: #0c0c0c;
-    border: 1px solid #181818;
+    background: var(--theme-surface, #0c0c0c);
+    border: 1px solid var(--theme-border, #181818);
     border-radius: 2px;
     padding: 10px 14px;
     font-size: 10px;
@@ -385,8 +385,8 @@ export const settingsStyles = `
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    background: #080808;
-    border: 1px solid #181818;
+    background: var(--theme-surface, #080808);
+    border: 1px solid var(--theme-border, #181818);
     border-radius: 2px;
   }
 
@@ -394,14 +394,14 @@ export const settingsStyles = `
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1px;
-    background: #141414;
-    border: 1px solid #141414;
+    background: var(--theme-border, #141414);
+    border: 1px solid var(--theme-border, #141414);
     border-radius: 2px;
     overflow: hidden;
   }
 
   .s-grid-cell {
-    background: #0e0e0e;
+    background: var(--theme-surface, #0e0e0e);
     padding: 10px 14px;
   }
 
@@ -462,7 +462,7 @@ export const settingsStyles = `
     letter-spacing: 0.06em;
     color: #3a3a3a;
     padding: 6px 0;
-    border-top: 1px solid #141414;
+    border-top: 1px solid var(--theme-border, #141414);
     margin-top: 8px;
   }
 `
@@ -473,13 +473,15 @@ export const settingsStyles = `
 export function SToggle({
   checked,
   onCheckedChange,
+  disabled,
 }: {
   checked: boolean
   onCheckedChange: (val: boolean) => void
+  disabled?: boolean
 }) {
   return (
-    <label className="s-toggle" style={{ cursor: 'pointer' }}>
-      <input type="checkbox" checked={checked} onChange={(e) => onCheckedChange(e.target.checked)} />
+    <label className="s-toggle" style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}>
+      <input type="checkbox" checked={checked} onChange={(e) => !disabled && onCheckedChange(e.target.checked)} disabled={disabled} />
       <span className="s-toggle-track" />
       <span className="s-toggle-thumb" />
     </label>

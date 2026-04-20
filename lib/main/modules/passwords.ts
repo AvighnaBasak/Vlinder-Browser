@@ -1,7 +1,7 @@
 import keytar from 'keytar'
 import { handle } from '@/lib/main/shared'
 
-const SERVICE = 'lux:passwords'
+const SERVICE = 'vlinder:passwords'
 
 function getOriginFromUrl(url: string): string {
   try {

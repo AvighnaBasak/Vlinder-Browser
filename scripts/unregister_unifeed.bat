@@ -1,34 +1,34 @@
 @echo off
-title Lux Unregistration Script
+title Vlinder Unregistration Script
 echo ============================================
-echo   Removing Lux registration from system
+echo   Removing Vlinder registration from system
 echo ============================================
 echo.
 
-rem --- Delete Lux custom file/URL handlers ---
+rem --- Delete Vlinder custom file/URL handlers ---
 reg delete "HKCU\Software\Classes\unifeedFile" /f >nul 2>&1
 reg delete "HKCU\Software\Classes\unifeedURL" /f >nul 2>&1
 
-rem --- Delete Lux StartMenuInternet registration ---
-reg delete "HKCU\Software\Clients\StartMenuInternet\lux" /f >nul 2>&1
+rem --- Delete Vlinder StartMenuInternet registration ---
+reg delete "HKCU\Software\Clients\StartMenuInternet\vlinder" /f >nul 2>&1
 
-rem --- Delete Lux RegisteredApplications entry ---
-reg delete "HKCU\Software\RegisteredApplications" /v "lux" /f >nul 2>&1
+rem --- Delete Vlinder RegisteredApplications entry ---
+reg delete "HKCU\Software\RegisteredApplications" /v "vlinder" /f >nul 2>&1
 
-rem --- Delete any other Lux keys the app may have stored ---
-reg delete "HKCU\Software\Lux" /f >nul 2>&1
+rem --- Delete any other Vlinder keys the app may have stored ---
+reg delete "HKCU\Software\Vlinder" /f >nul 2>&1
 
-rem --- Optional: Remove user-level URL associations pointing to Lux ---
+rem --- Optional: Remove user-level URL associations pointing to Vlinder ---
 for %%P in (http https) do (
-    reg query "HKCU\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\%%P\UserChoice" /v ProgId 2>nul | find /i "lux" >nul
+    reg query "HKCU\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\%%P\UserChoice" /v ProgId 2>nul | find /i "vlinder" >nul
     if !errorlevel! == 0 (
-        echo Resetting %%P association (was Lux)
+        echo Resetting %%P association (was Vlinder)
         reg delete "HKCU\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\%%P\UserChoice" /f >nul 2>&1
     )
 )
 
 echo.
-echo ✅ Lux has been completely unregistered.
+echo ✅ Vlinder has been completely unregistered.
 echo If it still appears in "Default Apps", restart your PC.
 echo.
 pause

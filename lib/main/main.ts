@@ -89,9 +89,9 @@ if (!initializeApp()) {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   // Set app name and user model id for windows
-  app.setName('Lux')
+  app.setName('Vlinder')
   // Align AppUserModelID with electron-builder appId to ensure correct name/icon and associations on Windows
-  electronApp.setAppUserModelId('com.samcux.lux')
+  electronApp.setAppUserModelId('com.avighnabasak.vlinder')
 
   // Register shortcuts handlers
   registerShortcutsHandlers()

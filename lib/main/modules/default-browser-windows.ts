@@ -4,8 +4,8 @@ import { exec } from 'child_process'
 import { app } from 'electron'
 
 // --- Configuration: Define your Application Details ---
-const APP_NAME_SHORT = 'lux' // CHANGE THIS: e.g., "myapp", "myeditor" (no spaces!)
-const APP_NAME = 'Lux' // Use the product name from package.json
+const APP_NAME_SHORT = 'vlinder' // CHANGE THIS: e.g., "myapp", "myeditor" (no spaces!)
+const APP_NAME = 'Vlinder' // Use the product name from package.json
 const APP_DESCRIPTION = 'A unified social media platform browser with modern design.' // CHANGE THIS if needed
 
 // --- Association Data (from your JSON example) ---
@@ -67,7 +67,7 @@ reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%File\\shell\\open\\command" /v
 rem Add Application entry for proper app identification
 reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%File\\Application" /v "ApplicationIcon" /t REG_SZ /d "%APP_ICON%" /f >nul
 reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%File\\Application" /v "ApplicationName" /t REG_SZ /d "%APP_NAME%" /f >nul
-reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%File\\Application" /v "AppUserModelId" /t REG_SZ /d "com.samcux.lux" /f >nul
+reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%File\\Application" /v "AppUserModelId" /t REG_SZ /d "com.avighnabasak.vlinder" /f >nul
 
 rem Define handler for URL protocols
 reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%URL" /v "" /t REG_SZ /d "%APP_NAME% Protocol" /f >nul
@@ -79,7 +79,7 @@ reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%URL\\shell\\open\\command" /v 
 rem Add Application entry for proper app identification
 reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%URL\\Application" /v "ApplicationIcon" /t REG_SZ /d "%APP_ICON%" /f >nul
 reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%URL\\Application" /v "ApplicationName" /t REG_SZ /d "%APP_NAME%" /f >nul
-reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%URL\\Application" /v "AppUserModelId" /t REG_SZ /d "com.samcux.lux" /f >nul
+reg add "HKCU\\Software\\Classes\\%APP_NAME_SHORT%URL\\Application" /v "AppUserModelId" /t REG_SZ /d "com.avighnabasak.vlinder" /f >nul
 
 rem Register with Default Programs
 reg add "HKCU\\Software\\RegisteredApplications" /v "%APP_NAME_SHORT%" /t REG_SZ /d "Software\\Clients\\StartMenuInternet\\%APP_NAME_SHORT%\\Capabilities" /f >nul

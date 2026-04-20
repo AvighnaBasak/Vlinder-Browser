@@ -33,8 +33,8 @@ export function FinishStage({
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         <div className="relative">
-          <div className="absolute -inset-4 rounded-full bg-[radial-gradient(circle_at_center,rgba(102,163,255,0.25),transparent_60%)] blur-xl" />
-          <CheckCircle2 className="relative z-10 w-16 h-16 text-[#66A3FF]" />
+          <div className="absolute -inset-4 rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.15),transparent_60%)] blur-xl" />
+          <CheckCircle2 className="relative z-10 w-16 h-16 text-white" />
         </div>
       </motion.div>
 
@@ -56,10 +56,10 @@ export function FinishStage({
         transition={{ duration: 0.35, delay: 0.1, ease: 'easeOut' }}
       >
         <li className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#66A3FF]" /> Press Ctrl+T for Command Palette
+          <Sparkles className="w-4 h-4 text-white" /> Press Ctrl+T for Command Palette
         </li>
         <li className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#66A3FF]" /> Change privacy and sidebar anytime in Settings
+          <Sparkles className="w-4 h-4 text-white" /> Change privacy and sidebar anytime in Settings
         </li>
       </motion.ul>
 
@@ -71,7 +71,7 @@ export function FinishStage({
         <button
           onClick={handleFinish}
           disabled={isFinishing}
-          className="px-8 py-3 rounded-2xl border border-[#0066FF]/30 bg-[#0066FF]/10 hover:bg-[#0066FF]/20 text-white disabled:opacity-60 disabled:cursor-not-allowed"
+          className="px-8 py-3 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white disabled:opacity-60 disabled:cursor-not-allowed"
         >
           Finish
         </button>

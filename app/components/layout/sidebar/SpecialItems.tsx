@@ -174,27 +174,31 @@ export function SpecialItems({ activePlatform, onPlatformChange, compact }: Spec
                       {/* Inner content */}
                       <div
                         className={cn(
-                          'absolute inset-[2px] rounded-[6px] flex items-center justify-center transition-all duration-300 ease-out z-20 pointer-events-none',
-                          isActive || showProgress || showCompleted
-                            ? 'bg-[#2a2a2a]'
-                            : 'bg-[#222] group-hover:bg-[#2a2a2a]'
+                          'absolute inset-[2px] rounded-[6px] flex items-center justify-center transition-all duration-300 ease-out z-20 pointer-events-none'
                         )}
+                        style={{
+                          background: isActive || showProgress || showCompleted
+                            ? 'var(--theme-surface2, #2a2a2a)'
+                            : 'var(--theme-surface, #222)',
+                        }}
                       >
                         {showCompleted ? (
                           <CheckCircle2
                             className={cn(
-                              'w-4 h-4 transition-all duration-300 ease-out group-hover:scale-110',
-                              'text-gray-600 dark:text-gray-400'
+                              'w-4 h-4 transition-all duration-300 ease-out group-hover:scale-110'
                             )}
+                            style={{ color: 'var(--theme-text-dim, #888)' }}
                           />
                         ) : (
                           <Icon
                             className={cn(
-                              'w-4 h-4 transition-all duration-300 ease-out group-hover:scale-110',
-                              isActive || showProgress
-                                ? 'text-gray-200'
-                                : 'text-gray-500'
+                              'w-4 h-4 transition-all duration-300 ease-out group-hover:scale-110'
                             )}
+                            style={{
+                              color: isActive || showProgress
+                                ? 'var(--theme-text-bright, #e5e5e5)'
+                                : 'var(--theme-text-dim, #888)',
+                            }}
                           />
                         )}
                       </div>
@@ -266,27 +270,31 @@ export function SpecialItems({ activePlatform, onPlatformChange, compact }: Spec
                       {/* Inner content */}
                       <div
                         className={cn(
-                          'absolute inset-[2px] rounded-[6px] flex items-center justify-center transition-all duration-300 ease-out z-20 pointer-events-none',
-                          isActive || showProgress || showCompleted
-                            ? 'bg-[#2a2a2a]'
-                            : 'bg-[#222] group-hover:bg-[#2a2a2a]'
+                          'absolute inset-[2px] rounded-[6px] flex items-center justify-center transition-all duration-300 ease-out z-20 pointer-events-none'
                         )}
+                        style={{
+                          background: isActive || showProgress || showCompleted
+                            ? 'var(--theme-surface2, #2a2a2a)'
+                            : 'var(--theme-surface, #222)',
+                        }}
                       >
                         {showCompleted ? (
                           <CheckCircle2
                             className={cn(
-                              'w-4 h-4 transition-all duration-300 ease-out group-hover:scale-110',
-                              'text-gray-600 dark:text-gray-400'
+                              'w-4 h-4 transition-all duration-300 ease-out group-hover:scale-110'
                             )}
+                            style={{ color: 'var(--theme-text-dim, #888)' }}
                           />
                         ) : (
                           <Icon
                             className={cn(
-                              'w-4 h-4 transition-all duration-300 ease-out group-hover:scale-110',
-                              isActive || showProgress
-                                ? 'text-gray-200'
-                                : 'text-gray-500'
+                              'w-4 h-4 transition-all duration-300 ease-out group-hover:scale-110'
                             )}
+                            style={{
+                              color: isActive || showProgress
+                                ? 'var(--theme-text-bright, #e5e5e5)'
+                                : 'var(--theme-text-dim, #888)',
+                            }}
                           />
                         )}
                       </div>

@@ -359,11 +359,13 @@ function PlatformNavigationComponent({
             />
             <div
               className={cn(
-                'absolute inset-[1px] rounded-[5px] overflow-hidden flex items-center justify-center',
-                isActive
-                  ? 'bg-[#2a2a2a]'
-                  : 'bg-[#222] group-hover:bg-[#2a2a2a]'
+                'absolute inset-[1px] rounded-[5px] overflow-hidden flex items-center justify-center'
               )}
+              style={{
+                background: isActive
+                  ? 'var(--theme-surface2, #2a2a2a)'
+                  : 'var(--theme-surface, #222)',
+              }}
             >
               {useOriginalLogos ? (
                 <img
@@ -382,13 +384,17 @@ function PlatformNavigationComponent({
                 <Icon
                   className={cn(
                     'w-4 h-4 rounded',
-                    isActive ? 'text-gray-200' : 'text-gray-500',
                     useOriginalLogos && !isCustomPlatform ? 'hidden' : '',
                     // For custom platforms, show icon until favicon loads
                     useOriginalLogos && isCustomPlatform && loadedFavicons[item.id] ? 'hidden' : '',
                     // Add subtle opacity for loading state
                     isCustomPlatform && loadingFavicons[item.id] ? 'opacity-60' : ''
                   )}
+                  style={{
+                    color: isActive
+                      ? 'var(--theme-text-bright, #e5e5e5)'
+                      : 'var(--theme-text-dim, #888)',
+                  }}
                 />
               )}
               {/* Loading indicator for custom platforms */}
@@ -428,9 +434,13 @@ function PlatformNavigationComponent({
                   <span
                     className={cn(
                       'font-medium whitespace-nowrap flex-1 truncate block text-[11px]',
-                      isTemporaryApp ? 'pr-6' : 'pr-1',
-                      isActive ? 'text-gray-200' : 'text-gray-500'
+                      isTemporaryApp ? 'pr-6' : 'pr-1'
                     )}
+                    style={{
+                      color: isActive
+                        ? 'var(--theme-text-bright, #e5e5e5)'
+                        : 'var(--theme-text-dim, #888)',
+                    }}
                   >
                     {item.name}
                   </span>

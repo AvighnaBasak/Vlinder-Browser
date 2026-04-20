@@ -30,7 +30,7 @@ export function SidebarPositionStage({ sidebarPosition, onChange, advance, goBac
         <button
           onClick={() => onChange('left')}
           className={`flex-1 p-4 rounded-2xl border transition backdrop-blur-sm ${
-            sidebarPosition === 'left' ? 'border-[#0066FF]/40 bg-[#0066FF]/10' : 'border-white/10 hover:bg-white/5'
+            sidebarPosition === 'left' ? 'border-white/40 bg-white/10' : 'border-white/10 hover:bg-white/5'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -40,7 +40,7 @@ export function SidebarPositionStage({ sidebarPosition, onChange, advance, goBac
         <button
           onClick={() => onChange('right')}
           className={`flex-1 p-4 rounded-2xl border transition backdrop-blur-sm ${
-            sidebarPosition === 'right' ? 'border-[#0066FF]/40 bg-[#0066FF]/10' : 'border-white/10 hover:bg-white/5'
+            sidebarPosition === 'right' ? 'border-white/40 bg-white/10' : 'border-white/10 hover:bg-white/5'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export function SidebarPositionStage({ sidebarPosition, onChange, advance, goBac
       </div>
       <div className="mt-10 flex items-center justify-between">
         <button onClick={goBack} className="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white/80">Back</button>
-        <button onClick={advance} className="px-6 py-2 rounded-2xl border border-[#0066FF]/30 bg-[#0066FF]/10 hover:bg-[#0066FF]/20 text-white">Continue</button>
+        <button onClick={advance} className="px-6 py-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white">Continue</button>
       </div>
     </motion.div>
   )

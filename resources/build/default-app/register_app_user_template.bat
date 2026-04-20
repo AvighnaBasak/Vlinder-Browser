@@ -45,7 +45,7 @@ reg add "HKCU\Software\Classes\%APP_NAME_SHORT%File\shell\open\command" /v "" /t
 rem Add Application entry for proper app identification
 reg add "HKCU\Software\Classes\%APP_NAME_SHORT%File\Application" /v "ApplicationIcon" /t REG_SZ /d "%APP_ICON%" /f >nul
 reg add "HKCU\Software\Classes\%APP_NAME_SHORT%File\Application" /v "ApplicationName" /t REG_SZ /d "%APP_NAME%" /f >nul
-reg add "HKCU\Software\Classes\%APP_NAME_SHORT%File\Application" /v "AppUserModelId" /t REG_SZ /d "com.samcux.lux" /f >nul
+reg add "HKCU\Software\Classes\%APP_NAME_SHORT%File\Application" /v "AppUserModelId" /t REG_SZ /d "com.avighnabasak.vlinder" /f >nul
 
 rem Define handler for URL protocols associated with this app
 reg add "HKCU\Software\Classes\%APP_NAME_SHORT%URL" /v "" /t REG_SZ /d "%APP_NAME% Protocol" /f >nul
@@ -57,7 +57,7 @@ reg add "HKCU\Software\Classes\%APP_NAME_SHORT%URL\shell\open\command" /v "" /t 
 rem Add Application entry for proper app identification
 reg add "HKCU\Software\Classes\%APP_NAME_SHORT%URL\Application" /v "ApplicationIcon" /t REG_SZ /d "%APP_ICON%" /f >nul
 reg add "HKCU\Software\Classes\%APP_NAME_SHORT%URL\Application" /v "ApplicationName" /t REG_SZ /d "%APP_NAME%" /f >nul
-reg add "HKCU\Software\Classes\%APP_NAME_SHORT%URL\Application" /v "AppUserModelId" /t REG_SZ /d "com.samcux.lux" /f >nul
+reg add "HKCU\Software\Classes\%APP_NAME_SHORT%URL\Application" /v "AppUserModelId" /t REG_SZ /d "com.avighnabasak.vlinder" /f >nul
 
 rem Register the application with Windows Default Programs system
 reg add "HKCU\Software\RegisteredApplications" /v "%APP_NAME_SHORT%" /t REG_SZ /d "Software\Clients\StartMenuInternet\%APP_NAME_SHORT%\Capabilities" /f >nul

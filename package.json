@@ -1,13 +1,13 @@
 {
-  "name": "lux",
+  "name": "vlinder",
   "productName": "Vlinder",
   "version": "0.1.5",
   "description": "Unified feed for all your social media platforms in one window",
   "main": "./out/main/main.js",
   "license": "GPL-3.0-only",
   "author": {
-    "name": "SamCux",
-    "url": "https://github.com/SamCux"
+    "name": "Avighna Basak",
+    "url": "https://github.com/AvighnaBasak"
   },
   "repository": {
     "type": "git",

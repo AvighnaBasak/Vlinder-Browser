@@ -48,12 +48,8 @@ export default function SettingsSidebar({ activeSection, onSectionChange }: Sett
       {/* Scanline overlay */}
       <style>{`
         .settings-sidebar-inner {
-          background: linear-gradient(
-            180deg,
-            #0a0a0a 0%,
-            #0d0d0d 100%
-          );
-          border-right: 1px solid #1f1f1f;
+          background: var(--theme-sidebar-bg, linear-gradient(180deg, #0a0a0a 0%, #0d0d0d 100%));
+          border-right: 1px solid var(--theme-border, #1f1f1f);
         }
         .settings-nav-item {
           position: relative;

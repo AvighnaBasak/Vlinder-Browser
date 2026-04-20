@@ -20,10 +20,10 @@ function setupMenu(mainWindow: BrowserWindow) {
       ...(isMac
         ? [
             {
-              label: 'Lux',
+              label: 'Vlinder',
               submenu: [
                 {
-                  label: 'About Lux',
+                  label: 'About Vlinder',
                   role: 'about',
                 },
                 { type: 'separator' },
@@ -34,7 +34,7 @@ function setupMenu(mainWindow: BrowserWindow) {
                 },
                 { type: 'separator' },
                 {
-                  label: 'Hide Lux',
+                  label: 'Hide Vlinder',
                   accelerator: 'CommandOrControl+H',
                   role: 'hide',
                 },
@@ -243,12 +243,12 @@ export function createAppWindow(): BrowserWindow {
     minWidth: 1000,
     minHeight: 700,
     show: false,
-    // Use acrylic on Windows, backgroundColor on Linux
+    backgroundColor: '#00000000',
     ...(process.platform === 'win32' ? { backgroundMaterial: 'acrylic' as const } : { transparent: true }),
     icon: appIcon,
     frame: false,
     titleBarStyle: 'hiddenInset',
-    title: 'Lux',
+    title: 'Vlinder',
     maximizable: true,
     resizable: true,
     webPreferences: {
@@ -270,12 +270,92 @@ export function createAppWindow(): BrowserWindow {
   // This will be updated when config handlers are registered
   const unifiedSession = session.fromPartition('persist:unified-session')
 
+  // --- User-Agent & Header Configuration ---
+  // Strip Electron/Vlinder identifiers from the user-agent so external sites
+  // (video players, streaming APIs) treat this as a standard Chrome browser.
+  // Without this, servers like vidfast.pro return 500 errors.
+  const defaultUA = app.userAgentFallback
+  const cleanUA = defaultUA
+    .replace(/\s*Vlinder\/\S+/gi, '')
+    .replace(/\s*Electron\/\S+/gi, '')
+    .replace(/\s*vlinder\/\S+/gi, '')
+  app.userAgentFallback = cleanUA
+  unifiedSession.setUserAgent(cleanUA)
+
+  // Set proper SEC-CH-UA client hints and handle Google accounts on the unified session
+  const chromiumVersion = process.versions.chrome.split('.')[0]
+  unifiedSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    details.requestHeaders['SEC-CH-UA'] =
+      `"Chromium";v="${chromiumVersion}", "Google Chrome";v="${chromiumVersion}", "Not-A.Brand";v="99"`
+    details.requestHeaders['SEC-CH-UA-MOBILE'] = '?0'
+    details.requestHeaders['SEC-CH-UA-PLATFORM'] =
+      process.platform === 'win32'
+        ? '"Windows"'
+        : process.platform === 'darwin'
+          ? '"macOS"'
+          : '"Linux"'
+
+    // Use Firefox UA for Google accounts to prevent sign-in blocking
+    // (same approach as the original min-master UASwitcher)
+    if (details.url.includes('accounts.google.com')) {
+      try {
+        const url = new URL(details.url)
+        if (url.hostname === 'accounts.google.com') {
+          const fxVersion =
+            91 + Math.floor((Date.now() - 1628553600000) / (4.1 * 7 * 24 * 60 * 60 * 1000))
+          const rootUA =
+            process.platform === 'win32'
+              ? `Mozilla/5.0 (Windows NT 10.0; WOW64; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
+              : process.platform === 'darwin'
+                ? `Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
+                : `Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
+          details.requestHeaders['User-Agent'] = rootUA
+        }
+      } catch {
+        // Ignore URL parsing errors
+      }
+    }
+
+    callback({ cancel: false, requestHeaders: details.requestHeaders })
+  })
+
+  // Grant permissions required for video playback and embedded players.
+  // Without this, Electron's default handler may deny media/DRM permissions
+  // causing players to fail silently or show errors.
+  unifiedSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    const allowedPermissions = [
+      'media',
+      'mediaKeySystem',   // DRM / Encrypted Media Extensions (Widevine)
+      'geolocation',
+      'notifications',
+      'fullscreen',
+      'pointerLock',
+      'openExternal',
+      'clipboard-read',
+      'clipboard-sanitized-write',
+    ]
+    callback(allowedPermissions.includes(permission))
+  })
+
+  // Also handle synchronous permission checks (some APIs check before requesting)
+  unifiedSession.setPermissionCheckHandler((_webContents, permission) => {
+    const allowedPermissions = [
+      'media',
+      'mediaKeySystem',
+      'fullscreen',
+      'pointerLock',
+      'clipboard-read',
+      'clipboard-sanitized-write',
+    ]
+    return allowedPermissions.includes(permission)
+  })
+
   // Load saved download path from config store
   const initDownloadPath = async () => {
     try {
       const Store = await import('electron-store')
       const ElectronStore = Store.default
-      const store = new ElectronStore({ name: 'lux-config' })
+      const store = new ElectronStore({ name: 'vlinder-config' })
       const savedPath = store.get('downloadPath', null) as string | null
       if (savedPath) {
         downloadManager.setDownloadPath(savedPath)

@@ -1,0 +1,341 @@
+export interface ThemeDefinition {
+  id: string
+  name: string
+  baseColor: string
+  palette: string[]
+  cssVars: Record<string, string>
+  isTransparent?: boolean
+}
+
+export const themes: ThemeDefinition[] = [
+  {
+    id: 'default',
+    name: 'Graphite',
+    baseColor: '#1a1a1a',
+    palette: ['#0e0e0e', '#1a1a1a', '#333333', '#888888', '#a0a0a0'],
+    cssVars: {
+      '--background': '#1a1a1a',
+      '--background2': '#1a1a1a',
+      '--card': '#1e1e1e',
+      '--secondary': '#222222',
+      '--border': '#2a2a2a',
+      '--input': '#222222',
+      '--muted': '#555555',
+      '--muted-foreground': '#d0d0d0',
+      '--foreground': '#e8e8e8',
+      '--text-main': '#e8e8e8',
+      '--text-low': '#a8a8a8',
+      '--primary': '#bbbbbb',
+      '--primary-foreground': '#1a1a1a',
+      '--accent': '#eeeeee',
+      '--ring': '#888888',
+      '--popover': '#1e1e1e',
+      '--popover-foreground': '#e8e8e8',
+      '--card-foreground': '#e8e8e8',
+      '--secondary-foreground': '#e8e8e8',
+      '--destructive': '#888888',
+      '--destructive-foreground': '#fff',
+      '--blue': '#888888',
+      '--blue2': '#999999',
+      '--theme-chrome': '#1a1a1a',
+      '--theme-surface': '#0e0e0e',
+      '--theme-surface2': '#111111',
+      '--theme-border': '#1f1f1f',
+      '--theme-border2': '#2a2a2a',
+      '--theme-text-bright': '#f0f0f0',
+      '--theme-text-dim': '#a0a0a0',
+      '--theme-text-muted': '#707070',
+      '--theme-sidebar-bg': 'linear-gradient(180deg, #0a0a0a 0%, #0d0d0d 100%)',
+      '--theme-content-bg': 'linear-gradient(160deg, #0c0c0c 0%, #0a0a0a 100%)',
+    },
+  },
+  {
+    id: 'crimson',
+    name: 'Crimson',
+    baseColor: '#c43e3e',
+    palette: ['#241212', '#3a1e1e', '#c43e3e', '#d46060', '#e8bfbf'],
+    cssVars: {
+      '--background': '#241212',
+      '--background2': '#241212',
+      '--card': '#2c1818',
+      '--secondary': '#3a1e1e',
+      '--border': '#502a2a',
+      '--input': '#3a1e1e',
+      '--muted': '#6e3a3a',
+      '--muted-foreground': '#e8c0c0',
+      '--foreground': '#fae8e8',
+      '--text-main': '#fae8e8',
+      '--text-low': '#d09090',
+      '--primary': '#c43e3e',
+      '--primary-foreground': '#fff',
+      '--accent': '#fae8e8',
+      '--ring': '#c43e3e',
+      '--popover': '#2c1818',
+      '--popover-foreground': '#fae8e8',
+      '--card-foreground': '#fae8e8',
+      '--secondary-foreground': '#fae8e8',
+      '--destructive': '#d46060',
+      '--destructive-foreground': '#fff',
+      '--blue': '#c43e3e',
+      '--blue2': '#d46060',
+      '--theme-chrome': '#241212',
+      '--theme-surface': '#1c0e0e',
+      '--theme-surface2': '#201010',
+      '--theme-border': '#3a1e1e',
+      '--theme-border2': '#502a2a',
+      '--theme-text-bright': '#fef0f0',
+      '--theme-text-dim': '#d89090',
+      '--theme-text-muted': '#a86868',
+      '--theme-sidebar-bg': 'linear-gradient(180deg, #1a0e0e 0%, #1e1010 100%)',
+      '--theme-content-bg': 'linear-gradient(160deg, #1c0e0e 0%, #1a0e0e 100%)',
+    },
+  },
+  {
+    id: 'rose',
+    name: 'Rose',
+    baseColor: '#d85a90',
+    palette: ['#24101a', '#3a1c2a', '#d85a90', '#e878a8', '#ecc4d8'],
+    cssVars: {
+      '--background': '#24101a',
+      '--background2': '#24101a',
+      '--card': '#2c1622',
+      '--secondary': '#3a1c2a',
+      '--border': '#502a3e',
+      '--input': '#3a1c2a',
+      '--muted': '#6e3a56',
+      '--muted-foreground': '#e8c0d4',
+      '--foreground': '#fce8f2',
+      '--text-main': '#fce8f2',
+      '--text-low': '#d098b0',
+      '--primary': '#d85a90',
+      '--primary-foreground': '#fff',
+      '--accent': '#fce8f2',
+      '--ring': '#d85a90',
+      '--popover': '#2c1622',
+      '--popover-foreground': '#fce8f2',
+      '--card-foreground': '#fce8f2',
+      '--secondary-foreground': '#fce8f2',
+      '--destructive': '#e878a8',
+      '--destructive-foreground': '#fff',
+      '--blue': '#d85a90',
+      '--blue2': '#e878a8',
+      '--theme-chrome': '#24101a',
+      '--theme-surface': '#1c0c14',
+      '--theme-surface2': '#200e18',
+      '--theme-border': '#3a1c2a',
+      '--theme-border2': '#502a3e',
+      '--theme-text-bright': '#fef0f8',
+      '--theme-text-dim': '#d898b8',
+      '--theme-text-muted': '#a86888',
+      '--theme-sidebar-bg': 'linear-gradient(180deg, #1a0c14 0%, #1e0e18 100%)',
+      '--theme-content-bg': 'linear-gradient(160deg, #1c0e16 0%, #1a0c14 100%)',
+    },
+  },
+  {
+    id: 'ocean',
+    name: 'Ocean',
+    baseColor: '#3858c4',
+    palette: ['#101424', '#1c2240', '#3858c4', '#5878e0', '#bcc4e8'],
+    cssVars: {
+      '--background': '#101424',
+      '--background2': '#101424',
+      '--card': '#161a2e',
+      '--secondary': '#1c2240',
+      '--border': '#283258',
+      '--input': '#1c2240',
+      '--muted': '#384878',
+      '--muted-foreground': '#c0d0ea',
+      '--foreground': '#e4ecfa',
+      '--text-main': '#e4ecfa',
+      '--text-low': '#98a8d0',
+      '--primary': '#3858c4',
+      '--primary-foreground': '#fff',
+      '--accent': '#e4ecfa',
+      '--ring': '#3858c4',
+      '--popover': '#161a2e',
+      '--popover-foreground': '#e4ecfa',
+      '--card-foreground': '#e4ecfa',
+      '--secondary-foreground': '#e4ecfa',
+      '--destructive': '#5878e0',
+      '--destructive-foreground': '#fff',
+      '--blue': '#3858c4',
+      '--blue2': '#5878e0',
+      '--theme-chrome': '#101424',
+      '--theme-surface': '#0e101e',
+      '--theme-surface2': '#101222',
+      '--theme-border': '#1c2240',
+      '--theme-border2': '#283258',
+      '--theme-text-bright': '#f0f2fc',
+      '--theme-text-dim': '#98a8d8',
+      '--theme-text-muted': '#6878a8',
+      '--theme-sidebar-bg': 'linear-gradient(180deg, #0e101e 0%, #101422 100%)',
+      '--theme-content-bg': 'linear-gradient(160deg, #101220 0%, #0e101e 100%)',
+    },
+  },
+  {
+    id: 'forest',
+    name: 'Forest',
+    baseColor: '#30b04a',
+    palette: ['#102414', '#1c3822', '#30b04a', '#50cc68', '#bce8c4'],
+    cssVars: {
+      '--background': '#102414',
+      '--background2': '#102414',
+      '--card': '#162c1a',
+      '--secondary': '#1c3822',
+      '--border': '#285030',
+      '--input': '#1c3822',
+      '--muted': '#387842',
+      '--muted-foreground': '#c0e8cc',
+      '--foreground': '#e4f8ea',
+      '--text-main': '#e4f8ea',
+      '--text-low': '#98c8a0',
+      '--primary': '#30b04a',
+      '--primary-foreground': '#fff',
+      '--accent': '#e4f8ea',
+      '--ring': '#30b04a',
+      '--popover': '#162c1a',
+      '--popover-foreground': '#e4f8ea',
+      '--card-foreground': '#e4f8ea',
+      '--secondary-foreground': '#e4f8ea',
+      '--destructive': '#50cc68',
+      '--destructive-foreground': '#fff',
+      '--blue': '#30b04a',
+      '--blue2': '#50cc68',
+      '--theme-chrome': '#102414',
+      '--theme-surface': '#0e1c0e',
+      '--theme-surface2': '#102012',
+      '--theme-border': '#1c3822',
+      '--theme-border2': '#285030',
+      '--theme-text-bright': '#f0fcf2',
+      '--theme-text-dim': '#98d0a0',
+      '--theme-text-muted': '#68a070',
+      '--theme-sidebar-bg': 'linear-gradient(180deg, #0e1c0e 0%, #102012 100%)',
+      '--theme-content-bg': 'linear-gradient(160deg, #101e10 0%, #0e1c0e 100%)',
+    },
+  },
+  {
+    id: 'amethyst',
+    name: 'Amethyst',
+    baseColor: '#9a40cc',
+    palette: ['#1c1024', '#301c40', '#9a40cc', '#b060e0', '#d4b8e4'],
+    cssVars: {
+      '--background': '#1c1024',
+      '--background2': '#1c1024',
+      '--card': '#24162e',
+      '--secondary': '#301c40',
+      '--border': '#422858',
+      '--input': '#301c40',
+      '--muted': '#583878',
+      '--muted-foreground': '#dcc0ee',
+      '--foreground': '#f4e4fa',
+      '--text-main': '#f4e4fa',
+      '--text-low': '#b898d8',
+      '--primary': '#9a40cc',
+      '--primary-foreground': '#fff',
+      '--accent': '#f4e4fa',
+      '--ring': '#9a40cc',
+      '--popover': '#24162e',
+      '--popover-foreground': '#f4e4fa',
+      '--card-foreground': '#f4e4fa',
+      '--secondary-foreground': '#f4e4fa',
+      '--destructive': '#b060e0',
+      '--destructive-foreground': '#fff',
+      '--blue': '#9a40cc',
+      '--blue2': '#b060e0',
+      '--theme-chrome': '#1c1024',
+      '--theme-surface': '#160c1c',
+      '--theme-surface2': '#1a0e22',
+      '--theme-border': '#301c40',
+      '--theme-border2': '#422858',
+      '--theme-text-bright': '#f8f0fc',
+      '--theme-text-dim': '#c090e0',
+      '--theme-text-muted': '#9070b0',
+      '--theme-sidebar-bg': 'linear-gradient(180deg, #160c1c 0%, #1a0e22 100%)',
+      '--theme-content-bg': 'linear-gradient(160deg, #180e20 0%, #160c1c 100%)',
+    },
+  },
+  {
+    id: 'transparent',
+    name: 'Glass',
+    baseColor: 'transparent',
+    palette: ['rgba(26,26,26,0.3)', 'rgba(30,30,30,0.4)', 'rgba(80,80,80,0.5)', '#888888', '#a0a0a0'],
+    cssVars: {
+      '--background': 'rgba(26, 26, 26, 0.5)',
+      '--background2': 'rgba(26, 26, 26, 0.5)',
+      '--card': 'rgba(30, 30, 30, 0.5)',
+      '--secondary': 'rgba(34, 34, 34, 0.5)',
+      '--border': 'rgba(255, 255, 255, 0.08)',
+      '--input': 'rgba(34, 34, 34, 0.5)',
+      '--muted': 'rgba(85, 85, 85, 0.5)',
+      '--muted-foreground': '#d0d0d0',
+      '--foreground': '#e8e8e8',
+      '--text-main': '#e8e8e8',
+      '--text-low': '#a8a8a8',
+      '--primary': '#bbbbbb',
+      '--primary-foreground': '#1a1a1a',
+      '--accent': '#eeeeee',
+      '--ring': '#888888',
+      '--popover': 'rgba(30, 30, 30, 0.8)',
+      '--popover-foreground': '#e8e8e8',
+      '--card-foreground': '#e8e8e8',
+      '--secondary-foreground': '#e8e8e8',
+      '--destructive': '#888888',
+      '--destructive-foreground': '#fff',
+      '--blue': '#888888',
+      '--blue2': '#999999',
+      '--theme-chrome': 'rgba(26, 26, 26, 0.4)',
+      '--theme-surface': 'rgba(10, 10, 10, 0.5)',
+      '--theme-surface2': 'rgba(17, 17, 17, 0.5)',
+      '--theme-border': 'rgba(255, 255, 255, 0.06)',
+      '--theme-border2': 'rgba(255, 255, 255, 0.08)',
+      '--theme-text-bright': '#f0f0f0',
+      '--theme-text-dim': '#a0a0a0',
+      '--theme-text-muted': '#707070',
+      '--theme-sidebar-bg': 'linear-gradient(180deg, rgba(10,10,10,0.4) 0%, rgba(13,13,13,0.4) 100%)',
+      '--theme-content-bg': 'linear-gradient(160deg, rgba(12,12,12,0.4) 0%, rgba(10,10,10,0.4) 100%)',
+    },
+    isTransparent: true,
+  },
+]
+
+export function getThemeById(id: string): ThemeDefinition {
+  return themes.find((t) => t.id === id) || themes[0]
+}
+
+export function applyTheme(themeId: string): void {
+  const theme = getThemeById(themeId)
+  const root = document.documentElement
+
+  for (const [key, value] of Object.entries(theme.cssVars)) {
+    root.style.setProperty(key, value)
+  }
+
+  if (theme.isTransparent) {
+    root.setAttribute('data-theme-transparent', 'true')
+  } else {
+    root.removeAttribute('data-theme-transparent')
+  }
+
+  root.setAttribute('data-theme', themeId)
+}
+
+export function loadAndApplyTheme(): string {
+  try {
+    const saved = localStorage.getItem('vlinder-theme')
+    const themeId = saved || 'default'
+    applyTheme(themeId)
+    return themeId
+  } catch {
+    applyTheme('default')
+    return 'default'
+  }
+}
+
+export function saveTheme(themeId: string): void {
+  try {
+    localStorage.setItem('vlinder-theme', themeId)
+  } catch {
+    // ignore
+  }
+  applyTheme(themeId)
+}

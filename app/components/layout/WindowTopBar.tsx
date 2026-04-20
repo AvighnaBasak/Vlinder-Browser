@@ -45,7 +45,7 @@ export function WindowTopBar({ onClose, onMinimize, onMaximize }: WindowTopBarPr
       onDoubleClick={handleDoubleClick}
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
-      <div className="bg-[#1a1a1a]">
+      <div style={{ backgroundColor: 'var(--theme-chrome, #1a1a1a)' }}>
         <div className="flex items-center justify-end h-6">
           <div
             className="flex items-center gap-2 no-drag relative z-10"

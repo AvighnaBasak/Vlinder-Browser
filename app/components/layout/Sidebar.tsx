@@ -282,12 +282,13 @@ function SidebarComponent({
   return (
     <div
       ref={sidebarRef}
+      style={{ backgroundColor: 'var(--theme-chrome, #1a1a1a)' }}
       className={cn(
         'flex flex-col',
         // Hidden mode: fixed positioned overlay with acrylic effect
         hidden && [
           'fixed top-0 bottom-0 z-50 h-screen w-36',
-          'backdrop-blur-3xl bg-[#1a1a1a] dark:bg-[#1a1a1a] rounded-2xl',
+          'backdrop-blur-3xl rounded-2xl',
           'border-r border-white/5 shadow-2xl',
           sidebarPosition === 'right' && 'border-r-0 border-l border-white/5',
           'transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]',
@@ -302,7 +303,7 @@ function SidebarComponent({
         hidden && !isVisible && 'pointer-events-none',
         // Normal modes: relative positioning with transitions
         !hidden && [
-          'relative bg-[#1a1a1a]',
+          'relative',
           // When transitioning from hidden to compact, immediately set width to compact without transition
           isTransitioningFromHidden
             ? 'w-10'

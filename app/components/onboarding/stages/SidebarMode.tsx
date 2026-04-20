@@ -33,7 +33,7 @@ export function SidebarModeStage({ mode, onChange, advance, goBack }: SidebarMod
           <button
             onClick={() => onChange('expanded')}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
-              mode === 'expanded' ? 'bg-[#0066FF] text-white' : 'bg-white/10 text-white/80 hover:bg-white/15'
+              mode === 'expanded' ? 'bg-white text-black' : 'bg-white/10 text-white/80 hover:bg-white/15'
             }`}
             title="Expanded - Full width sidebar"
           >
@@ -42,7 +42,7 @@ export function SidebarModeStage({ mode, onChange, advance, goBack }: SidebarMod
           <button
             onClick={() => onChange('compact')}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
-              mode === 'compact' ? 'bg-[#0066FF] text-white' : 'bg-white/10 text-white/80 hover:bg-white/15'
+              mode === 'compact' ? 'bg-white text-black' : 'bg-white/10 text-white/80 hover:bg-white/15'
             }`}
             title="Compact - Narrow sidebar"
           >
@@ -51,7 +51,7 @@ export function SidebarModeStage({ mode, onChange, advance, goBack }: SidebarMod
           <button
             onClick={() => onChange('hidden')}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
-              mode === 'hidden' ? 'bg-[#0066FF] text-white' : 'bg-white/10 text-white/80 hover:bg-white/15'
+              mode === 'hidden' ? 'bg-white text-black' : 'bg-white/10 text-white/80 hover:bg-white/15'
             }`}
             title="Hidden - Slides in on hover"
           >
@@ -61,7 +61,7 @@ export function SidebarModeStage({ mode, onChange, advance, goBack }: SidebarMod
       </div>
       <div className="mt-10 flex items-center justify-between">
         <button onClick={goBack} className="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white/80">Back</button>
-        <button onClick={advance} className="px-6 py-2 rounded-2xl border border-[#0066FF]/30 bg-[#0066FF]/10 hover:bg-[#0066FF]/20 text-white">Continue</button>
+        <button onClick={advance} className="px-6 py-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white">Continue</button>
       </div>
     </motion.div>
   )

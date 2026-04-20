@@ -39,8 +39,8 @@ export default function DownloadsSettings() {
       <style>{settingsStyles}</style>
       <style>{`
         .s-dl-path-container {
-          background: #080808;
-          border: 1px dashed #2a2a2a;
+          background: var(--theme-surface, #080808);
+          border: 1px dashed var(--theme-border2, #2a2a2a);
           border-radius: 4px;
           padding: 24px;
           display: flex;
@@ -52,8 +52,8 @@ export default function DownloadsSettings() {
         }
 
         .s-dl-target-output {
-          background: #111;
-          border: 1px solid #1f1f1f;
+          background: var(--theme-surface2, #111);
+          border: 1px solid var(--theme-border, #1f1f1f);
           padding: 12px 16px;
           width: 100%;
           border-radius: 3px;
@@ -68,20 +68,20 @@ export default function DownloadsSettings() {
           flex: 1;
           font-family: 'JetBrains Mono', monospace;
           font-size: 11px;
-          color: #a0a0a0;
+          color: var(--foreground, #a0a0a0);
           overflow: hidden;
           text-overflow: ellipsis;
           text-align: left;
         }
 
         .s-dl-path-text span {
-          color: #555;
+          color: var(--theme-text-dim, #555);
         }
 
         .s-dl-prompt {
           font-family: 'JetBrains Mono', monospace;
           font-size: 10px;
-          color: #444;
+          color: var(--theme-text-muted, #444);
           margin-bottom: 4px;
           text-transform: uppercase;
           letter-spacing: 0.1em;
@@ -103,7 +103,7 @@ export default function DownloadsSettings() {
           <div className="s-dl-prompt">Target Directory Mapping:</div>
           
           <div className="s-dl-path-container">
-            <div className="w-10 h-10 rounded bg-[#111] border border-[#1f1f1f] flex items-center justify-center">
+            <div className="w-10 h-10 rounded flex items-center justify-center" style={{ background: 'var(--theme-surface2, #111)', border: '1px solid var(--theme-border, #1f1f1f)' }}>
               <FolderOpen className="w-5 h-5 text-gray-600" />
             </div>
 
@@ -117,7 +117,7 @@ export default function DownloadsSettings() {
               </button>
             </div>
 
-            <div style={{ fontSize: '10px', color: '#3d3d3d', letterSpacing: '0.04em', fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ fontSize: '10px', color: 'var(--theme-text-muted, #3d3d3d)', letterSpacing: '0.04em', fontFamily: "'JetBrains Mono', monospace" }}>
               * ALL INCOMING BINARY DATA WILL BE WRITTEN TO THIS VOLUME
             </div>
           </div>

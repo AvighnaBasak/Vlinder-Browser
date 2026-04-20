@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import { Eye, BarChart3, Search, Globe, Square } from 'lucide-react'
 import { settingsStyles, SToggle } from './settings-design-system'
+import ThemeCustomization from './ThemeCustomization'
+import { saveTheme } from '@/app/utils/themes'
 
 interface AppearanceSettingsProps {
   useOriginalLogos: boolean
@@ -8,8 +11,8 @@ interface AppearanceSettingsProps {
   onToggleTransparency: (enabled: boolean) => void
   loadingBarEnabled: boolean
   onToggleLoadingBar: (enabled: boolean) => void
-  commandPaletteEnabled: boolean // New prop
-  onToggleCommandPalette: (enabled: boolean) => void // New prop
+  commandPaletteEnabled: boolean
+  onToggleCommandPalette: (enabled: boolean) => void
   addressBarEnabled: boolean
   onToggleAddressBar: (enabled: boolean) => void
   squarePinnedTabs: boolean
@@ -68,6 +71,18 @@ export default function AppearanceSettings({
   squarePinnedTabs,
   onToggleSquarePinnedTabs,
 }: AppearanceSettingsProps) {
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    try {
+      return localStorage.getItem('vlinder-theme') || 'default'
+    } catch {
+      return 'default'
+    }
+  })
+
+  const handleThemeChange = (themeId: string) => {
+    setCurrentTheme(themeId)
+    saveTheme(themeId)
+  }
   const values: Record<string, boolean> = {
     transparency: transparencyEnabled,
     loadingBar: loadingBarEnabled,
@@ -89,6 +104,7 @@ export default function AppearanceSettings({
   return (
     <>
       <style>{settingsStyles}</style>
+      <ThemeCustomization currentTheme={currentTheme} onThemeChange={handleThemeChange} />
       <div className="s-panel">
         <div className="s-panel-header">
           <div className="s-panel-icon">

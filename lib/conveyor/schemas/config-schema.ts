@@ -301,4 +301,35 @@ export const configIpcSchema = {
     args: z.tuple([z.string()]),
     return: z.boolean(),
   },
+  // VPN / Tor handlers
+  'vpn-get-status': {
+    args: z.tuple([]),
+    return: z.object({
+      enabled: z.boolean(),
+      connecting: z.boolean(),
+      downloading: z.boolean(),
+      progress: z.number(),
+      ip: z.union([z.string(), z.null()]),
+    }),
+  },
+  'vpn-enable': {
+    args: z.tuple([]),
+    return: z.object({
+      success: z.boolean(),
+      ip: z.string().optional(),
+      error: z.string().optional(),
+    }),
+  },
+  'vpn-disable': {
+    args: z.tuple([]),
+    return: z.void(),
+  },
+  'vpn-new-identity': {
+    args: z.tuple([]),
+    return: z.object({
+      success: z.boolean(),
+      ip: z.string().optional(),
+      error: z.string().optional(),
+    }),
+  },
 } as const

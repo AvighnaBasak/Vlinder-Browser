@@ -71,7 +71,7 @@ export default function Settings({
     <div
       className="absolute inset-0 flex animate-fade-in overflow-hidden"
       style={{
-        background: '#080808',
+        background: 'var(--theme-surface, #080808)',
         fontFamily: "'JetBrains Mono', 'SF Mono', 'Consolas', monospace",
       }}
     >

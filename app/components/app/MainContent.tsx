@@ -97,9 +97,11 @@ function MainContentComponent({
 
   return (
     <div
-      className={`relative h-full text-[#222222] dark:text-[#afc3e2] ${
-        transparencyEnabled ? 'bg-[#f8f8f8]/0 dark:bg-[#0f172a]/0' : 'bg-[#f8f8f8]/90 dark:bg-[#0f172a]/90'
-      }`}
+      className="relative h-full"
+      style={{
+        color: 'var(--foreground, #afc3e2)',
+        background: 'var(--background, #1a1a1a)',
+      }}
     >
       {webviewTabs.map((platform) => (
         <WebviewContainer

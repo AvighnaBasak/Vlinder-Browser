@@ -11,9 +11,10 @@ interface PrivacyStageProps {
 
 const modes = [
   { id: 'disabled', name: 'Disabled', description: 'No content blocking' },
-  { id: 'adsOnly', name: 'Block Ads', description: 'Block advertisements only' },
+  { id: 'adsOnly', name: 'Block Ads', description: 'Block ads including YouTube video ads' },
   { id: 'adsAndTrackers', name: 'Block Ads & Trackers', description: 'Block ads and tracking scripts' },
-  { id: 'all', name: 'Block All', description: 'Block ads, trackers, and cookie notices' },
+  { id: 'adsTrackersAndCookies', name: 'Block Ads, Trackers & Cookies', description: 'Block ads, trackers, and cookie popups' },
+  { id: 'aggressive', name: 'Aggressive', description: 'Maximum blocking — all ads, trackers, cookies, and consent popups' },
 ]
 
 export function PrivacyStage({ adBlockerMode, onChange, advance, goBack }: PrivacyStageProps) {
@@ -35,7 +36,7 @@ export function PrivacyStage({ adBlockerMode, onChange, advance, goBack }: Priva
       </motion.div>
       <div className="space-y-3">
         {modes.map((mode) => (
-          <label key={mode.id} className={`flex items-start gap-3 p-4 rounded-2xl border cursor-pointer backdrop-blur-sm ${adBlockerMode === mode.id ? 'border-[#0066FF]/40 bg-[#0066FF]/10' : 'border-white/10 hover:bg-white/5'}`}>
+          <label key={mode.id} className={`flex items-start gap-3 p-4 rounded-2xl border cursor-pointer backdrop-blur-sm ${adBlockerMode === mode.id ? 'border-white/40 bg-white/10' : 'border-white/10 hover:bg-white/5'}`}>
             <input
               type="radio"
               name="adBlocker"
@@ -53,7 +54,7 @@ export function PrivacyStage({ adBlockerMode, onChange, advance, goBack }: Priva
       </div>
       <div className="mt-10 flex items-center justify-between">
         <button onClick={goBack} className="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white/80">Back</button>
-        <button onClick={advance} className="px-6 py-2 rounded-2xl border border-[#0066FF]/30 bg-[#0066FF]/10 hover:bg-[#0066FF]/20 text-white">Continue</button>
+        <button onClick={advance} className="px-6 py-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white">Continue</button>
       </div>
     </motion.div>
   )

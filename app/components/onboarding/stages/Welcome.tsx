@@ -13,35 +13,16 @@ export function Welcome({ advance }: { advance: OnboardingAdvanceCallback }) {
       >
         <img src={AppLogo} alt="Vlinder" className="h-16 object-contain" />
       </motion.div>
-      <motion.div
-        className="relative z-10 mb-6 px-4 py-1 border border-gray-500/50 rounded-full"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
-      >
-        <span className="text-gray-400 text-sm">Vlinder Browser</span>
-      </motion.div>
       <motion.h1
         className="text-5xl md:text-6xl font-bold text-white mb-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2, ease: 'easeOut' }}
+        transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
       >
         Welcome to
         {/* <br /> */}
         <span className="text-gray-300"> Vlinder</span>
       </motion.h1>
-      <motion.p
-        className="text-gray-400 text-xl max-w-2xl"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.25, ease: 'easeOut' }}
-      >
-        Thank you for joining us early on this journey.
-      </motion.p>
-
-      <div className="mb-8"></div>
-
       <div className="my-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

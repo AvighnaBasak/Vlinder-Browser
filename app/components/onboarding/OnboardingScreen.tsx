@@ -7,14 +7,14 @@ interface OnboardingScreenProps {
 
 export function OnboardingScreen({ children }: OnboardingScreenProps) {
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden window-drag select-none bg-[#050A20]">
+    <div className="fixed inset-0 z-50 overflow-hidden window-drag select-none bg-[#0a0a0a]">
       {/* Gradient orbs */}
       <div
-        className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-[radial-gradient(circle_at_center,rgba(0,102,255,0.4),rgba(0,102,255,0.2),transparent)] blur-[60px] z-[5] pointer-events-none"
+        className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),rgba(255,255,255,0.03),transparent)] blur-[60px] z-[5] pointer-events-none"
         aria-hidden="true"
       />
       <div
-        className="absolute bottom-[-30%] right-[-20%] w-[80%] h-[80%] rounded-full bg-[radial-gradient(circle_at_center,rgba(0,102,255,0.3),rgba(0,85,221,0.15),transparent)] blur-[70px] z-[5] pointer-events-none"
+        className="absolute bottom-[-30%] right-[-20%] w-[80%] h-[80%] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06),rgba(200,200,200,0.03),transparent)] blur-[70px] z-[5] pointer-events-none"
         aria-hidden="true"
       />
 

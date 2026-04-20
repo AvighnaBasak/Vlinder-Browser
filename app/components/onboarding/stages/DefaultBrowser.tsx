@@ -74,7 +74,7 @@ export function DefaultBrowserStage({ advance, goBack }: DefaultBrowserStageProp
             onClick={handleSetDefault}
             disabled={isDefault || setting}
             className={`px-4 py-2 rounded-lg border transition ${
-              isDefault ? 'border-white/10 text-white/60 cursor-not-allowed' : 'border-[#0066FF]/40 bg-[#0066FF]/10 text-white hover:bg-[#0066FF]/20'
+              isDefault ? 'border-white/10 text-white/60 cursor-not-allowed' : 'border-white/40 bg-white/10 text-white hover:bg-white/20'
             }`}
           >
             {setting ? 'Setting…' : isDefault ? 'Already Set' : 'Set as Default'}
@@ -85,7 +85,7 @@ export function DefaultBrowserStage({ advance, goBack }: DefaultBrowserStageProp
 
       <div className="mt-10 flex items-center justify-between">
         <button onClick={goBack} className="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white/80">Back</button>
-        <button onClick={advance} className="px-6 py-2 rounded-2xl border border-[#0066FF]/30 bg-[#0066FF]/10 hover:bg-[#0066FF]/20 text-white">Continue</button>
+        <button onClick={advance} className="px-6 py-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white">Continue</button>
       </div>
     </motion.div>
   )

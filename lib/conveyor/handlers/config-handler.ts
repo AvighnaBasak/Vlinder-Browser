@@ -11,7 +11,7 @@ async function initStore() {
     const ElectronStore = await import('electron-store')
     Store = ElectronStore.default
     store = new Store({
-      name: 'lux-config',
+      name: 'vlinder-config',
     })
   }
   return store
@@ -308,10 +308,33 @@ export const registerConfigHandlers = () => {
     const s = await initStore()
     s.set('adBlocker', mode)
 
-    // Update content blocker configuration
     const { contentBlocker } = await import('@/lib/main/modules/content-blocker')
     const ses = session.fromPartition('persist:unified-session')
     await contentBlocker.updateConfig(ses)
+  })
+
+  // VPN / Tor handlers
+  handle('vpn-get-status', async () => {
+    const { torProxy } = await import('@/lib/main/modules/tor-proxy')
+    return torProxy.getStatus()
+  })
+
+  handle('vpn-enable', async () => {
+    const { torProxy } = await import('@/lib/main/modules/tor-proxy')
+    const ses = session.fromPartition('persist:unified-session')
+    return torProxy.enable(ses)
+  })
+
+  handle('vpn-disable', async () => {
+    const { torProxy } = await import('@/lib/main/modules/tor-proxy')
+    const ses = session.fromPartition('persist:unified-session')
+    await torProxy.disable(ses)
+  })
+
+  handle('vpn-new-identity', async () => {
+    const { torProxy } = await import('@/lib/main/modules/tor-proxy')
+    const ses = session.fromPartition('persist:unified-session')
+    return torProxy.newIdentity(ses)
   })
 
   // Download handlers

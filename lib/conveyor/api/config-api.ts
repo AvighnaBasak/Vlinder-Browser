@@ -65,6 +65,12 @@ export class ConfigApi extends ConveyorApi {
   getAdBlocker = () => this.invoke('config-get-adblocker')
   setAdBlocker = (mode: string) => this.invoke('config-set-adblocker', mode)
 
+  // VPN / Tor
+  getVpnStatus = () => this.invoke('vpn-get-status')
+  enableVpn = () => this.invoke('vpn-enable')
+  disableVpn = () => this.invoke('vpn-disable')
+  vpnNewIdentity = () => this.invoke('vpn-new-identity')
+
   // Platform Order
   getPlatformOrder = () => this.invoke('config-get-platform-order')
   setPlatformOrder = (order: string[]) => this.invoke('config-set-platform-order', order)

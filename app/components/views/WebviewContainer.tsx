@@ -69,6 +69,7 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
     const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false)
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
     const [loadingProgress, setLoadingProgress] = useState(0)
+    const [isHtmlFullscreen, setIsHtmlFullscreen] = useState(false)
     const previousTitleRef = useRef<string>('')
 
     // (context menu state moved to WebviewContextMenuLayer)
@@ -1105,6 +1106,46 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
       }
     }, [platform.name])
 
+    // Handle HTML5 Fullscreen API events from webview content
+    // External video players (vidfast.pro, etc.) use element.requestFullscreen()
+    // which fires these events on the webview tag. We need to expand the webview
+    // over the entire window when this happens.
+    useEffect(() => {
+      const webview = webviewRef.current as any
+      if (!webview) return
+
+      const handleEnterFullscreen = () => {
+        setIsHtmlFullscreen(true)
+      }
+
+      const handleLeaveFullscreen = () => {
+        setIsHtmlFullscreen(false)
+      }
+
+      // Handle ESC key to exit HTML fullscreen
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && isHtmlFullscreen) {
+          try {
+            // Tell the webview content to exit fullscreen
+            webview.executeJavaScript('document.exitFullscreen().catch(() => {})')
+          } catch {
+            // Fallback: just reset state
+            setIsHtmlFullscreen(false)
+          }
+        }
+      }
+
+      webview.addEventListener('enter-html-full-screen', handleEnterFullscreen)
+      webview.addEventListener('leave-html-full-screen', handleLeaveFullscreen)
+      window.addEventListener('keydown', handleKeyDown)
+
+      return () => {
+        webview.removeEventListener('enter-html-full-screen', handleEnterFullscreen)
+        webview.removeEventListener('leave-html-full-screen', handleLeaveFullscreen)
+        window.removeEventListener('keydown', handleKeyDown)
+      }
+    }, [platform.name, isHtmlFullscreen])
+
     // Cleanup effect: destroy webview when component unmounts or tab is closed
     useEffect(() => {
       return () => {
@@ -1183,16 +1224,18 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
     return (
       <div
         className={`
-        absolute inset-0 w-full h-full
-        ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}
+        ${isHtmlFullscreen ? 'fixed inset-0 w-screen h-screen' : 'absolute inset-0 w-full h-full'}
+        ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}
       `}
         style={{
           willChange: 'opacity',
           transition: isActive ? 'opacity 100ms ease-out' : 'opacity 50ms ease-out',
+          background: isHtmlFullscreen ? '#000' : 'var(--background, #1a1a1a)',
+          zIndex: isHtmlFullscreen ? 2147483647 : (isActive ? 10 : 0),
         }}
       >
-        {/* Loading Bar - only show when active, loading, and enabled */}
-        {isActive && loadingBarEnabled && <LoadingBar isLoading={isLoading} progress={loadingProgress} />}
+        {/* Loading Bar - only show when active, loading, enabled, and not in fullscreen */}
+        {isActive && loadingBarEnabled && !isHtmlFullscreen && <LoadingBar isLoading={isLoading} progress={loadingProgress} />}
         {shouldRenderWebview ? (
           <WebviewSurface ref={webviewRef} platform={platform} className="w-full h-full webview-transparent" />
         ) : (

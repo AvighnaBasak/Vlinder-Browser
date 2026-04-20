@@ -146,12 +146,12 @@ export default function SettingsContent({
     <>
       <style>{`
         .settings-content-area {
-          background: linear-gradient(160deg, #0c0c0c 0%, #0a0a0a 100%);
+          background: var(--theme-content-bg, linear-gradient(160deg, #0c0c0c 0%, #0a0a0a 100%));
           font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
         }
         .settings-content-topbar {
-          border-bottom: 1px solid #1a1a1a;
-          background: rgba(10,10,10,0.95);
+          border-bottom: 1px solid var(--theme-border, #1a1a1a);
+          background: var(--theme-surface, rgba(10,10,10,0.95));
         }
         .settings-breadcrumb-sep {
           color: #2a2a2a;

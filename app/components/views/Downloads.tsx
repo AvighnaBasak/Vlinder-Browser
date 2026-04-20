@@ -144,7 +144,7 @@ export default function Downloads({ isActive }: DownloadsProps) {
   if (!isActive) return null
 
   return (
-    <div className="absolute inset-0 bg-[#080808] flex flex-col pt-0">
+    <div className="absolute inset-0 flex flex-col pt-0" style={{ background: 'var(--theme-surface, #080808)' }}>
       <style>{settingsStyles}</style>
       <style>{`
         .s-dl-toolbar {
@@ -152,24 +152,24 @@ export default function Downloads({ isActive }: DownloadsProps) {
           align-items: center;
           justify-content: space-between;
           padding: 16px 20px;
-          border-bottom: 1px solid #141414;
-          background: #0a0a0a;
+          border-bottom: 1px solid var(--theme-border, #141414);
+          background: var(--theme-surface2, #0a0a0a);
         }
 
         .s-dl-tabs {
           display: flex;
           gap: 2px;
-          background: #111;
+          background: var(--theme-surface2, #111);
           padding: 2px;
           border-radius: 3px;
-          border: 1px solid #1f1f1f;
+          border: 1px solid var(--theme-border, #1f1f1f);
         }
 
         .s-dl-tab {
           padding: 6px 12px;
           font-family: 'JetBrains Mono', monospace;
           font-size: 10px;
-          color: #555;
+          color: var(--theme-text-dim, #555);
           text-transform: uppercase;
           cursor: pointer;
           border-radius: 2px;
@@ -177,13 +177,13 @@ export default function Downloads({ isActive }: DownloadsProps) {
         }
 
         .s-dl-tab.active {
-          color: #e5e5e5;
+          color: var(--theme-text-bright, #e5e5e5);
           background: rgba(255,255,255,0.08);
           font-weight: 500;
         }
-        
+
         .s-dl-tab:hover:not(.active) {
-          color: #888;
+          color: var(--muted-foreground, #888);
           background: rgba(255,255,255,0.02);
         }
 
@@ -192,7 +192,7 @@ export default function Downloads({ isActive }: DownloadsProps) {
           align-items: center;
           padding: 14px 20px;
           gap: 16px;
-          border-bottom: 1px solid #0f0f0f;
+          border-bottom: 1px solid var(--theme-border, #0f0f0f);
           transition: background 0.1s ease;
           position: relative;
         }
@@ -209,13 +209,13 @@ export default function Downloads({ isActive }: DownloadsProps) {
           width: 32px;
           height: 32px;
           border-radius: 4px;
-          background: #111;
-          border: 1px solid #222;
+          background: var(--theme-surface2, #111);
+          border: 1px solid var(--theme-border2, #222);
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          color: #666;
+          color: var(--theme-text-dim, #666);
         }
 
         .s-dl-icon.completed {
@@ -252,7 +252,7 @@ export default function Downloads({ isActive }: DownloadsProps) {
 
         .s-dl-title {
           font-size: 12px;
-          color: #c8c8c8;
+          color: var(--theme-text-bright, #c8c8c8);
           font-weight: 500;
           white-space: nowrap;
           overflow: hidden;
@@ -268,7 +268,7 @@ export default function Downloads({ isActive }: DownloadsProps) {
         .s-dl-meta {
           font-family: 'JetBrains Mono', monospace;
           font-size: 10px;
-          color: #555;
+          color: var(--theme-text-dim, #555);
           display: flex;
           gap: 12px;
         }
@@ -276,7 +276,7 @@ export default function Downloads({ isActive }: DownloadsProps) {
         .s-dl-progress-bar {
           width: 100%;
           height: 3px;
-          background: #1a1a1a;
+          background: var(--background, #1a1a1a);
           border-radius: 2px;
           overflow: hidden;
           margin-top: 4px;
@@ -284,12 +284,12 @@ export default function Downloads({ isActive }: DownloadsProps) {
 
         .s-dl-progress-fill {
           height: 100%;
-          background: #555;
+          background: var(--primary, #555);
           transition: width 0.3s ease;
         }
 
         .s-dl-progress-fill.progressing {
-          background: #4a8acc;
+          background: var(--blue, #4a8acc);
         }
 
         .s-dl-actions {
@@ -308,16 +308,16 @@ export default function Downloads({ isActive }: DownloadsProps) {
           justify-content: center;
           border-radius: 3px;
           background: transparent;
-          border: 1px solid #1f1f1f;
-          color: #888;
+          border: 1px solid var(--theme-border, #1f1f1f);
+          color: var(--muted-foreground, #888);
           cursor: pointer;
           transition: all 0.15s ease;
         }
 
         .s-dl-btn:hover {
-          background: #1a1a1a;
-          border-color: #333;
-          color: #e5e5e5;
+          background: var(--background, #1a1a1a);
+          border-color: var(--theme-border2, #333);
+          color: var(--theme-text-bright, #e5e5e5);
         }
 
         .s-dl-btn.danger:hover {
@@ -334,7 +334,7 @@ export default function Downloads({ isActive }: DownloadsProps) {
       `}</style>
 
       {/* Header */}
-      <div className="s-panel-header" style={{ background: '#0e0e0e', borderBottom: '1px solid #141414', flexShrink: 0 }}>
+      <div className="s-panel-header" style={{ background: 'var(--theme-surface2, #0e0e0e)', borderBottom: '1px solid var(--theme-border, #141414)', flexShrink: 0 }}>
         <div className="s-panel-icon">
           <DownloadCloud className="w-3.5 h-3.5 text-gray-500" />
         </div>
@@ -366,11 +366,11 @@ export default function Downloads({ isActive }: DownloadsProps) {
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto scrollbar-none" style={{ background: '#080808' }}>
+      <div className="flex-1 overflow-y-auto scrollbar-none" style={{ background: 'var(--theme-surface, #080808)' }}>
         {filteredDownloads.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', textAlign: 'center' }}>
-            <DownloadCloud className="w-12 h-12 text-[#1a1a1a] mb-4" />
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#444', letterSpacing: '0.1em' }}>
+            <DownloadCloud className="w-12 h-12 mb-4" style={{ color: 'var(--theme-border2, #1a1a1a)' }} />
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: 'var(--theme-text-muted, #444)', letterSpacing: '0.1em' }}>
               NO TRANSFERS FOUND
             </div>
           </div>
