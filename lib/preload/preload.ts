@@ -111,6 +111,13 @@ if (process.contextIsolated) {
       },
       openDownloadsPage: () => ipcRenderer.send('open-downloads-page'),
       confirmQuitWithDownloads: () => ipcRenderer.send('confirm-quit-with-downloads'),
+      // Password save prompt
+      onPasswordSavePrompt: (callback: (data: any) => void) => {
+        ipcRenderer.on('password-save-prompt', (_, data) => callback(data))
+      },
+      removePasswordSavePromptListener: () => {
+        ipcRenderer.removeAllListeners('password-save-prompt')
+      },
     })
   } catch (error) {
     console.error(error)
@@ -219,5 +226,12 @@ if (process.contextIsolated) {
     },
     openDownloadsPage: () => ipcRenderer.send('open-downloads-page'),
     confirmQuitWithDownloads: () => ipcRenderer.send('confirm-quit-with-downloads'),
+    // Password save prompt
+    onPasswordSavePrompt: (callback: (data: any) => void) => {
+      ipcRenderer.on('password-save-prompt', (_, data) => callback(data))
+    },
+    removePasswordSavePromptListener: () => {
+      ipcRenderer.removeAllListeners('password-save-prompt')
+    },
   }
 }

@@ -276,6 +276,24 @@
       </div>
     </div>
 
+    <div class="settings-container" id="tor-settings-container">
+      <h3 data-string="settingsTorHeading"></h3>
+
+      <div class="setting-section">
+        <input type="checkbox" id="checkbox-tor-enabled" />
+        <label for="checkbox-tor-enabled" data-string="settingsTorEnableToggle"></label>
+      </div>
+
+      <div class="setting-section" id="tor-status-section" hidden>
+        <div class="tor-status">
+          <span id="tor-status-icon" class="tor-status-icon"></span>
+          <span id="tor-status-text" data-string="settingsTorDisconnected"></span>
+        </div>
+      </div>
+
+      <div class="settings-info-subheading" data-string="settingsTorDescription"></div>
+    </div>
+
     <div class="settings-container" id="proxy-settings-container">
       <h3 data-string="settingsProxyHeading"></h3>
 

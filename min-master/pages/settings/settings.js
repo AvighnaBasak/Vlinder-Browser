@@ -569,6 +569,38 @@ settings.listen('passwordManager', function (value) {
   keychainViewLink.hidden = !(currentPasswordManager.name === 'Built-in password manager')
 })
 
+/* tor settings */
+
+var torEnabledCheckbox = document.getElementById('checkbox-tor-enabled')
+var torStatusSection = document.getElementById('tor-status-section')
+var torStatusIcon = document.getElementById('tor-status-icon')
+var torStatusText = document.getElementById('tor-status-text')
+
+settings.get('torEnabled', function (value) {
+  torEnabledCheckbox.checked = (value === true)
+  if (value === true) {
+    torStatusSection.hidden = false
+    torStatusIcon.className = 'tor-status-icon connected'
+    torStatusText.textContent = l('settingsTorConnected')
+  }
+})
+
+settings.listen('torEnabled', function (value) {
+  torEnabledCheckbox.checked = (value === true)
+  if (value === true) {
+    torStatusSection.hidden = false
+    torStatusIcon.className = 'tor-status-icon connecting'
+    torStatusText.textContent = l('settingsTorConnecting')
+  } else {
+    torStatusSection.hidden = true
+  }
+})
+
+torEnabledCheckbox.addEventListener('change', function () {
+  settings.set('torEnabled', this.checked)
+  showRestartRequiredBanner()
+})
+
 /* proxy settings */
 
 const proxyTypeInput = document.getElementById('selected-proxy-type')

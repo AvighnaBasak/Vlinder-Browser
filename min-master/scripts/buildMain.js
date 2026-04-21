@@ -23,6 +23,7 @@ const modules = [
   'main/remoteActions.js',
   'main/keychainService.js',
   'js/util/proxy.js',
+  'main/torManager.js',
   'main/themeMain.js'
 ]
 

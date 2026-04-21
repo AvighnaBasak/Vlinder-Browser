@@ -18,6 +18,7 @@ import UpdaterToast from '@/app/components/app/UpdaterToast'
 import { DownloadNotificationToast } from '@/app/components/app/DownloadNotificationToast'
 import { DownloadWarningDialog } from '@/app/components/app/DownloadWarningDialog'
 import { FloatingDownloadButton } from '@/app/components/app/FloatingDownloadButton'
+import { PasswordSavePrompt } from '@/app/components/app/PasswordSavePrompt'
 
 const getDomainName = (input: string): string => {
   try {
@@ -1490,6 +1491,8 @@ export default function App() {
       <DownloadNotificationToast />
       {/* Download warning dialog */}
       <DownloadWarningDialog />
+      {/* Password save prompt */}
+      <PasswordSavePrompt />
       {/* Floating download button - shows when sidebar is hidden */}
       {sidebarMode === 'hidden' && (
         <FloatingDownloadButton

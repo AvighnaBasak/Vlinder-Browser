@@ -87,7 +87,8 @@ module.exports = function (platform, extraOptions) {
       '!**/node_modules/@types/',
       '!**/node_modules/pdfjs-dist/legacy',
       '!**/node_modules/pdfjs-dist/lib',
-      '!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}'
+      '!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}',
+      'tor/**/*'
     ],
     linux: {
       target: [

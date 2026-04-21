@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { usePasswordsService } from '@/app/services/passwords'
-import { Lock, Trash2, Copy, Upload } from 'lucide-react'
+import { Lock, Trash2, Copy, Upload, Eye, EyeOff, Pencil, Check, X, ShieldCheck } from 'lucide-react'
 import { settingsStyles } from '../../settings-design-system'
 
 interface CredentialSummary {
@@ -10,10 +10,26 @@ interface CredentialSummary {
   createdAt: string
 }
 
+interface RevealedPasswords {
+  [id: string]: string
+}
+
+interface EditingState {
+  id: string
+  username: string
+  password: string
+}
+
 export function PasswordsPage() {
   const passwords = usePasswordsService()
   const [items, setItems] = useState<CredentialSummary[]>([])
   const [query, setQuery] = useState('')
+  const [revealed, setRevealed] = useState<RevealedPasswords>({})
+  const [editing, setEditing] = useState<EditingState | null>(null)
+  const [authenticated, setAuthenticated] = useState(false)
+  const [authPromptVisible, setAuthPromptVisible] = useState(false)
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim()
@@ -28,14 +44,94 @@ export function PasswordsPage() {
       .catch((e: any) => console.error('Failed to load passwords', e))
   }, [passwords])
 
-  const handleDelete = async (id: string) => {
-    await passwords.remove(id)
-    setItems((prev) => prev.filter((i) => i.id !== id))
+  const requireAuth = useCallback(
+    async (action: () => void) => {
+      if (authenticated) {
+        action()
+        return
+      }
+      setAuthPromptVisible(true)
+      setPendingAction(() => action)
+    },
+    [authenticated]
+  )
+
+  const handleAuthenticate = async () => {
+    const ok = await passwords.verifyAuth()
+    if (ok) {
+      setAuthenticated(true)
+      setAuthPromptVisible(false)
+      if (pendingAction) {
+        pendingAction()
+        setPendingAction(null)
+      }
+    } else {
+      setAuthPromptVisible(false)
+      setPendingAction(null)
+    }
   }
 
   const handleReveal = async (id: string) => {
-    const cred = await passwords.get(id)
-    await navigator.clipboard.writeText(cred.password)
+    requireAuth(async () => {
+      if (revealed[id]) {
+        setRevealed((prev) => {
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+        return
+      }
+      const pw = await passwords.revealPassword(id)
+      if (pw !== null) {
+        setRevealed((prev) => ({ ...prev, [id]: pw }))
+      }
+    })
+  }
+
+  const handleCopy = async (id: string) => {
+    requireAuth(async () => {
+      const pw = await passwords.revealPassword(id)
+      if (pw !== null) {
+        await navigator.clipboard.writeText(pw)
+        setCopiedId(id)
+        setTimeout(() => setCopiedId(null), 2000)
+      }
+    })
+  }
+
+  const handleDelete = async (id: string) => {
+    await passwords.remove(id)
+    setItems((prev) => prev.filter((i) => i.id !== id))
+    setRevealed((prev) => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }
+
+  const handleStartEdit = (item: CredentialSummary) => {
+    requireAuth(async () => {
+      const pw = await passwords.revealPassword(item.id)
+      if (pw !== null) {
+        setEditing({ id: item.id, username: item.username, password: pw })
+      }
+    })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editing) return
+    await passwords.update(editing.id, {
+      username: editing.username,
+      password: editing.password,
+    })
+    setEditing(null)
+    const next = await passwords.list()
+    setItems(next)
+    setRevealed({})
+  }
+
+  const handleCancelEdit = () => {
+    setEditing(null)
   }
 
   const handleImport = async (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,19 +224,19 @@ export function PasswordsPage() {
         .s-pwd-origin { color: #888; }
         .s-pwd-date { color: #333; font-size: 9px; }
         .s-pwd-action-cell { text-align: right; }
-        .s-pwd-action-btns { display: flex; gap: 6px; justify-content: flex-end; }
+        .s-pwd-action-btns { display: flex; gap: 4px; justify-content: flex-end; }
         .s-pwd-btn {
           font-size: 9px;
           font-family: 'JetBrains Mono', monospace;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          padding: 5px 10px;
+          padding: 5px 8px;
           border-radius: 2px;
           cursor: pointer;
           transition: all 0.12s ease;
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 4px;
           border: 1px solid #1f1f1f;
           background: transparent;
           color: #3a3a3a;
@@ -148,6 +244,7 @@ export function PasswordsPage() {
         .s-pwd-btn:hover { color: #888; background: rgba(255,255,255,0.04); border-color: #2f2f2f; }
         .s-pwd-btn.danger { border-color: #2a1a1a; color: #663333; }
         .s-pwd-btn.danger:hover { background: rgba(200,60,60,0.05); color: #884444; border-color: #3a2020; }
+        .s-pwd-btn.success { border-color: #1a2a1a; color: #336633; }
         .s-pwd-empty td {
           text-align: center;
           padding: 40px 20px !important;
@@ -155,6 +252,45 @@ export function PasswordsPage() {
           font-style: italic;
           font-size: 10px !important;
         }
+        .s-pwd-password {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          color: #555;
+          letter-spacing: 0.15em;
+        }
+        .s-pwd-edit-input {
+          background: #080808;
+          border: 1px solid #2a2a2a;
+          border-radius: 2px;
+          padding: 4px 8px;
+          font-size: 10px;
+          font-family: 'JetBrains Mono', monospace;
+          color: #888;
+          outline: none;
+          width: 100%;
+        }
+        .s-pwd-edit-input:focus { border-color: #3a3a3a; }
+        .s-pwd-auth-banner {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 20px;
+          background: rgba(59, 130, 246, 0.05);
+          border-bottom: 1px solid #141414;
+        }
+        .s-pwd-auth-btn {
+          font-size: 10px;
+          font-family: 'JetBrains Mono', monospace;
+          letter-spacing: 0.06em;
+          padding: 6px 14px;
+          border-radius: 2px;
+          cursor: pointer;
+          border: 1px solid #2563eb33;
+          background: rgba(37, 99, 235, 0.1);
+          color: #60a5fa;
+          transition: all 0.12s ease;
+        }
+        .s-pwd-auth-btn:hover { background: rgba(37, 99, 235, 0.2); border-color: #2563eb55; }
       `}</style>
 
       <div className="s-pwd-panel">
@@ -165,12 +301,39 @@ export function PasswordsPage() {
           </div>
           <div>
             <div className="s-panel-title">Saved Passwords</div>
-            <div className="s-panel-desc">Manage stored credentials and import from CSV</div>
+            <div className="s-panel-desc">
+              {authenticated
+                ? 'Manage stored credentials — authenticated'
+                : 'Verify your identity to view or edit passwords'}
+            </div>
           </div>
           <span style={{ marginLeft: 'auto', fontSize: '9px', letterSpacing: '0.1em', color: '#333' }}>
             {items.length} SAVED
           </span>
         </div>
+
+        {/* Auth banner */}
+        {authPromptVisible && (
+          <div className="s-pwd-auth-banner">
+            <ShieldCheck className="w-4 h-4" style={{ color: '#60a5fa' }} />
+            <span style={{ fontSize: '10px', color: '#60a5fa', letterSpacing: '0.04em' }}>
+              System authentication required to continue
+            </span>
+            <button className="s-pwd-auth-btn" onClick={handleAuthenticate} style={{ marginLeft: 'auto' }}>
+              Verify Identity
+            </button>
+            <button
+              className="s-pwd-btn"
+              onClick={() => {
+                setAuthPromptVisible(false)
+                setPendingAction(null)
+              }}
+              style={{ padding: '5px 8px' }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
 
         {/* Toolbar */}
         <div className="s-pwd-toolbar">
@@ -194,33 +357,90 @@ export function PasswordsPage() {
             <tr>
               <th>Site</th>
               <th>Username</th>
+              <th>Password</th>
               <th>Saved</th>
               <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((i) => (
-              <tr key={i.id} className="s-pwd-row">
-                <td className="s-pwd-origin">{i.origin}</td>
-                <td>{i.username}</td>
-                <td className="s-pwd-date">{new Date(i.createdAt).toLocaleDateString()}</td>
-                <td className="s-pwd-action-cell">
-                  <div className="s-pwd-action-btns">
-                    <button className="s-pwd-btn" onClick={() => handleReveal(i.id)}>
-                      <Copy className="w-2.5 h-2.5" />
-                      Copy
-                    </button>
-                    <button className="s-pwd-btn danger" onClick={() => handleDelete(i.id)}>
-                      <Trash2 className="w-2.5 h-2.5" />
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {filtered.map((i) => {
+              const isEditing = editing?.id === i.id
+
+              if (isEditing) {
+                return (
+                  <tr key={i.id} className="s-pwd-row">
+                    <td className="s-pwd-origin">{i.origin}</td>
+                    <td>
+                      <input
+                        className="s-pwd-edit-input"
+                        value={editing.username}
+                        onChange={(e) => setEditing({ ...editing, username: e.target.value })}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="s-pwd-edit-input"
+                        type="text"
+                        value={editing.password}
+                        onChange={(e) => setEditing({ ...editing, password: e.target.value })}
+                      />
+                    </td>
+                    <td className="s-pwd-date">{new Date(i.createdAt).toLocaleDateString()}</td>
+                    <td className="s-pwd-action-cell">
+                      <div className="s-pwd-action-btns">
+                        <button className="s-pwd-btn success" onClick={handleSaveEdit}>
+                          <Check className="w-2.5 h-2.5" />
+                          Save
+                        </button>
+                        <button className="s-pwd-btn" onClick={handleCancelEdit}>
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              }
+
+              return (
+                <tr key={i.id} className="s-pwd-row">
+                  <td className="s-pwd-origin">{i.origin}</td>
+                  <td>{i.username}</td>
+                  <td>
+                    <span className="s-pwd-password">
+                      {revealed[i.id] ? revealed[i.id] : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
+                    </span>
+                  </td>
+                  <td className="s-pwd-date">{new Date(i.createdAt).toLocaleDateString()}</td>
+                  <td className="s-pwd-action-cell">
+                    <div className="s-pwd-action-btns">
+                      <button className="s-pwd-btn" onClick={() => handleReveal(i.id)} title={revealed[i.id] ? 'Hide' : 'Reveal'}>
+                        {revealed[i.id] ? <EyeOff className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}
+                      </button>
+                      <button
+                        className="s-pwd-btn"
+                        onClick={() => handleCopy(i.id)}
+                        title="Copy password"
+                      >
+                        {copiedId === i.id ? (
+                          <Check className="w-2.5 h-2.5" style={{ color: '#4ade80' }} />
+                        ) : (
+                          <Copy className="w-2.5 h-2.5" />
+                        )}
+                      </button>
+                      <button className="s-pwd-btn" onClick={() => handleStartEdit(i)} title="Edit">
+                        <Pencil className="w-2.5 h-2.5" />
+                      </button>
+                      <button className="s-pwd-btn danger" onClick={() => handleDelete(i.id)} title="Delete">
+                        <Trash2 className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
             {filtered.length === 0 && (
               <tr className="s-pwd-empty">
-                <td colSpan={4}>No passwords saved yet</td>
+                <td colSpan={5}>No passwords saved yet</td>
               </tr>
             )}
           </tbody>
@@ -257,10 +477,14 @@ function splitCsvLine(line: string): string[] {
   for (let i = 0; i < line.length; i++) {
     const ch = line[i]
     if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') { cur += '"'; i++ }
-      else inQuotes = !inQuotes
-    } else if (ch === ',' && !inQuotes) { out.push(cur); cur = '' }
-    else cur += ch
+      if (inQuotes && line[i + 1] === '"') {
+        cur += '"'
+        i++
+      } else inQuotes = !inQuotes
+    } else if (ch === ',' && !inQuotes) {
+      out.push(cur)
+      cur = ''
+    } else cur += ch
   }
   out.push(cur)
   return out.map((s) => s.trim())

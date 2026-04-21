@@ -24,7 +24,7 @@ async function initStore() {
 const TOR_SOCKS_PORT = 9050
 const TOR_CONTROL_PORT = 9051
 
-const TOR_VERSION = '14.0.4'
+const TOR_VERSION = '15.0.10'
 
 function getTorDir(): string {
   return join(app.getPath('userData'), 'tor')

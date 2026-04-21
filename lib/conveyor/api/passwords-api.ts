@@ -15,4 +15,14 @@ export class PasswordsApi extends ConveyorApi {
     this.invoke('passwords:importCsv', rows)
 
   findForUrl = (url: string) => this.invoke('passwords:findForUrl', url)
+
+  verifyAuth = () => this.invoke('passwords:verifyAuth')
+
+  revealPassword = (id: string) => this.invoke('passwords:revealPassword', id)
+
+  dismissSavePrompt = (origin: string) => this.invoke('passwords:dismissSavePrompt', origin)
+
+  neverSaveForOrigin = (origin: string) => this.invoke('passwords:neverSaveForOrigin', origin)
+
+  isNeverSaveOrigin = (origin: string) => this.invoke('passwords:isNeverSaveOrigin', origin)
 }

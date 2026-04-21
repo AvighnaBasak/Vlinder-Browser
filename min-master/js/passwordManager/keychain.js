@@ -45,8 +45,35 @@ class Keychain {
     ipcRenderer.invoke('credentialStoreSetPassword', { domain, username, password })
   }
 
+  updateCredential (original, updated) {
+    return ipcRenderer.invoke('credentialStoreUpdatePassword', original, updated)
+  }
+
   deleteCredential (domain, username) {
     ipcRenderer.invoke('credentialStoreDeletePassword', { domain, username })
+  }
+
+  async verifyAuth () {
+    return ipcRenderer.invoke('credentialStoreVerifyAuth')
+  }
+
+  async revealPassword (domain, username) {
+    return ipcRenderer.invoke('credentialStoreRevealPassword', domain, username)
+  }
+
+  async searchCredentials (query) {
+    return ipcRenderer.invoke('credentialStoreSearchCredentials', query)
+  }
+
+  async getAllCredentialsMasked () {
+    return ipcRenderer.invoke('credentialStoreGetCredentialsMasked').then(function (results) {
+      return results.map(function (result) {
+        return {
+          ...result,
+          manager: 'Keychain'
+        }
+      })
+    })
   }
 
   async importCredentials (fileContents) {

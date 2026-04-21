@@ -6,6 +6,7 @@ import { registerWindowHandlers } from '@/lib/conveyor/handlers/window-handler'
 import { registerAppHandlers } from '@/lib/conveyor/handlers/app-handler'
 import { registerConfigHandlers } from '@/lib/conveyor/handlers/config-handler'
 import { contentBlocker } from '@/lib/main/modules/content-blocker'
+import { initPasswordCapture } from '@/lib/main/modules/password-capture'
 import { getCurrentShortcut } from '@/lib/main/modules/shortcuts'
 import { shortcutsEmitter } from '@/lib/main/modules/shortcuts-storage'
 import { downloadManager } from '@/lib/main/modules/download-manager'
@@ -423,6 +424,7 @@ export function createAppWindow(): BrowserWindow {
     // Initialize content blocker with unified session
     const unifiedSession = session.fromPartition('persist:unified-session')
     contentBlocker.initialize(unifiedSession).catch((err) => {})
+    initPasswordCapture(mainWindow)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

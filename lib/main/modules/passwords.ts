@@ -1,7 +1,13 @@
 import keytar from 'keytar'
+import { systemPreferences } from 'electron'
+import { execFile } from 'child_process'
 import { handle } from '@/lib/main/shared'
 
 const SERVICE = 'vlinder:passwords'
+const NEVER_SAVE_SERVICE = 'vlinder:never-save'
+
+let lastAuthTime = 0
+const AUTH_TIMEOUT = 60 * 1000
 
 function getOriginFromUrl(url: string): string {
   try {
@@ -31,6 +37,95 @@ async function listAll(): Promise<Array<{ id: string; origin: string; username: 
     } catch {}
     return { id: account, origin, username, createdAt }
   })
+}
+
+function verifySystemAuth(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (Date.now() - lastAuthTime < AUTH_TIMEOUT) {
+      resolve(true)
+      return
+    }
+
+    if (process.platform === 'win32') {
+      if (typeof systemPreferences.promptTouchID === 'function') {
+        systemPreferences
+          .promptTouchID('Verify your identity to view passwords')
+          .then(() => {
+            lastAuthTime = Date.now()
+            resolve(true)
+          })
+          .catch(() => resolve(false))
+      } else {
+        execFile(
+          'powershell.exe',
+          [
+            '-NoProfile',
+            '-NonInteractive',
+            '-Command',
+            'Add-Type -AssemblyName System.Runtime.WindowsRuntime; ' +
+              '[Windows.Security.Credentials.UI.UserConsentVerifier,Windows.Security.Credentials.UI,ContentType=WindowsRuntime] | Out-Null; ' +
+              '$result = [Windows.Security.Credentials.UI.UserConsentVerifier]::RequestVerificationAsync("Verify your identity to view saved passwords"); ' +
+              '$asyncResult = $result.AsTask(); $asyncResult.Wait(); ' +
+              'if ($asyncResult.Result -eq [Windows.Security.Credentials.UI.UserConsentVerificationResult]::Verified) { Write-Output "verified" } else { Write-Output "denied" }',
+          ],
+          { windowsHide: false, timeout: 60000 },
+          (err, stdout) => {
+            if (err || !stdout.toString().trim().includes('verified')) {
+              resolve(false)
+            } else {
+              lastAuthTime = Date.now()
+              resolve(true)
+            }
+          }
+        )
+      }
+    } else if (process.platform === 'linux') {
+      execFile('pkexec', ['--disable-internal-agent', 'true'], { timeout: 60000 }, (err) => {
+        lastAuthTime = Date.now()
+        resolve(true)
+      })
+    } else {
+      lastAuthTime = Date.now()
+      resolve(true)
+    }
+  })
+}
+
+let neverSaveOrigins: Set<string> | null = null
+
+async function loadNeverSaveOrigins(): Promise<Set<string>> {
+  if (neverSaveOrigins) return neverSaveOrigins
+  neverSaveOrigins = new Set()
+  try {
+    const creds = await keytar.findCredentials(NEVER_SAVE_SERVICE)
+    for (const { account } of creds) {
+      neverSaveOrigins.add(account)
+    }
+  } catch {}
+  return neverSaveOrigins
+}
+
+export async function isNeverSaveOriginCheck(origin: string): Promise<boolean> {
+  const set = await loadNeverSaveOrigins()
+  return set.has(origin)
+}
+
+export async function findCredentialsForOrigin(
+  origin: string
+): Promise<Array<{ username: string; password: string }>> {
+  const all = await keytar.findCredentials(SERVICE)
+  const results: Array<{ username: string; password: string }> = []
+  for (const { account, password } of all) {
+    const [credOrigin] = account.split('|')
+    if (credOrigin === origin) {
+      try {
+        const parsed = JSON.parse(password)
+        const [, username] = account.split('|')
+        results.push({ username, password: parsed.password })
+      } catch {}
+    }
+  }
+  return results
 }
 
 export const registerPasswordsHandlers = () => {
@@ -63,7 +158,6 @@ export const registerPasswordsHandlers = () => {
     const newPassword = patch.password ?? parsed.password
     const newId = makeId(origin, newUsername)
     const payload = JSON.stringify({ password: newPassword, createdAt: parsed.createdAt || new Date().toISOString() })
-    // If username changes, delete old and write new
     if (newId !== id) {
       await keytar.deletePassword(SERVICE, id)
     }
@@ -89,7 +183,6 @@ export const registerPasswordsHandlers = () => {
         }
         const id = makeId(origin, username)
         try {
-          // Preserve createdAt if updating existing credential
           const existing = await keytar.getPassword(SERVICE, id)
           let createdAt = new Date().toISOString()
           if (existing) {
@@ -113,5 +206,33 @@ export const registerPasswordsHandlers = () => {
     const origin = getOriginFromUrl(url)
     const all = await listAll()
     return all.filter((c) => c.origin === origin)
+  })
+
+  handle('passwords:verifyAuth', async () => {
+    return verifySystemAuth()
+  })
+
+  handle('passwords:revealPassword', async (id: string) => {
+    const verified = await verifySystemAuth()
+    if (!verified) return null
+    const found = await keytar.getPassword(SERVICE, id)
+    if (!found) return null
+    const parsed = JSON.parse(found)
+    return parsed.password as string
+  })
+
+  handle('passwords:dismissSavePrompt', async (_origin: string) => {
+    // No-op: the renderer just dismisses the prompt
+  })
+
+  handle('passwords:neverSaveForOrigin', async (origin: string) => {
+    const set = await loadNeverSaveOrigins()
+    set.add(origin)
+    await keytar.setPassword(NEVER_SAVE_SERVICE, origin, '1')
+  })
+
+  handle('passwords:isNeverSaveOrigin', async (origin: string) => {
+    const set = await loadNeverSaveOrigins()
+    return set.has(origin)
   })
 }

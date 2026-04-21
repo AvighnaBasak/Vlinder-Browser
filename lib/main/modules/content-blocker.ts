@@ -181,7 +181,7 @@ const COOKIE_DISMISS_SCRIPT = `
     }
     // Hide common cookie banner containers
     document.querySelectorAll('#onetrust-banner-sdk, #CybotCookiebotDialog, .cookie-consent-banner, .cookie-notice, .cookie-banner, [class*="cookie-consent"], [id*="cookie-consent"], [class*="cookie-banner"], [id*="cookie-banner"], .cc-window').forEach(el => {
-      (el as HTMLElement).style.display = 'none';
+      el.style.display = 'none';
     });
   };
 
