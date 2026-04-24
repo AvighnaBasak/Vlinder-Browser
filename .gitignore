@@ -26,6 +26,8 @@ dist-ssr
 # AI 
 .claude
 .gemini
+.claudeignore
+claude.md
 
 # Env
 .env

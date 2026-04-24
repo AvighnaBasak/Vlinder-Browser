@@ -79,6 +79,12 @@ const typedShortcuts = [
     shortcut: 'Shift+CommandOrControl+T',
     category: 'Browser',
   },
+  {
+    id: 'browser.openHistory',
+    name: 'Open History',
+    shortcut: 'CommandOrControl+H',
+    category: 'Browser',
+  },
 ] as const satisfies ShortcutAction[]
 
 type ShortcutId = (typeof typedShortcuts)[number]['id']

@@ -11,32 +11,20 @@ interface PrivacySettingsProps {
 const modes = [
   {
     id: 'disabled',
-    name: 'Disabled',
-    description: 'No content blocking active',
+    name: 'No Blocking',
+    description: 'No content blocking active — all content loads normally',
     tag: 'OFF',
   },
   {
-    id: 'adsOnly',
-    name: 'Block Ads',
-    description: 'Block advertisements including YouTube video ads',
-    tag: 'L1',
-  },
-  {
     id: 'adsAndTrackers',
-    name: 'Block Ads & Trackers',
-    description: 'Block ads, tracking scripts, and strip tracking parameters from URLs',
-    tag: 'L2',
-  },
-  {
-    id: 'adsTrackersAndCookies',
-    name: 'Block Ads, Trackers & Cookies',
-    description: 'L2 plus block third-party cookies and auto-dismiss cookie consent banners',
-    tag: 'L3',
+    name: 'Block Ads, Popups & Trackers',
+    description: 'Block ads, tracking scripts, popups, redirects, and strip tracking parameters from URLs',
+    tag: 'STANDARD',
   },
   {
     id: 'aggressive',
-    name: 'Aggressive',
-    description: 'Maximum blocking — all ads, trackers, cookies, consent popups, and cosmetic filtering',
+    name: 'Maximum Blocking',
+    description: 'Block everything — ads, trackers, cookies, popups, redirects, consent banners, and cosmetic filtering',
     tag: 'MAX',
   },
 ]
@@ -127,7 +115,7 @@ export default function PrivacySettings({ adBlockerMode, onAdBlockerChange }: Pr
               marginLeft: 'auto',
               fontSize: '9px',
               letterSpacing: '0.1em',
-              color: adBlockerMode !== 'disabled' ? '#5a8a5a' : 'var(--theme-text-muted, #3a3a3a)',
+              color: adBlockerMode !== 'disabled' ? '#5a8a5a' : 'var(--theme-text-muted, #777777)',
               textTransform: 'uppercase',
             }}
           >
@@ -167,7 +155,7 @@ export default function PrivacySettings({ adBlockerMode, onAdBlockerChange }: Pr
                           background: 'rgba(255,255,255,0.04)',
                           border: '1px solid var(--theme-border, #1f1f1f)',
                           borderRadius: '2px',
-                          color: isSelected ? 'var(--theme-text-dim, #666)' : 'var(--theme-text-muted, #2a2a2a)',
+                          color: isSelected ? 'var(--theme-text-dim, #666)' : 'var(--theme-text-muted, #777777)',
                         }}
                       >
                         {mode.tag}
@@ -205,7 +193,7 @@ export default function PrivacySettings({ adBlockerMode, onAdBlockerChange }: Pr
               marginLeft: 'auto',
               fontSize: '9px',
               letterSpacing: '0.1em',
-              color: vpnEnabled ? '#5a8a5a' : 'var(--theme-text-muted, #3a3a3a)',
+              color: vpnEnabled ? '#5a8a5a' : 'var(--theme-text-muted, #777777)',
               textTransform: 'uppercase',
             }}
           >
@@ -221,7 +209,7 @@ export default function PrivacySettings({ adBlockerMode, onAdBlockerChange }: Pr
               ) : vpnEnabled ? (
                 <Wifi className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#5a8a5a' }} />
               ) : (
-                <WifiOff className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--theme-text-muted, #2f2f2f)' }} />
+                <WifiOff className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--theme-text-muted, #777777)' }} />
               )}
               <div>
                 <div className="s-row-label">Tor Proxy</div>

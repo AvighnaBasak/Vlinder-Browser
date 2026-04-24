@@ -301,7 +301,11 @@ export const registerConfigHandlers = () => {
   // Ad Blocker handlers
   handle('config-get-adblocker', async () => {
     const s = await initStore()
-    return s.get('adBlocker', 'disabled') as string
+    const raw = s.get('adBlocker', 'disabled') as string
+    // Migrate old modes to new simplified set
+    if (raw === 'adsOnly') { s.set('adBlocker', 'adsAndTrackers'); return 'adsAndTrackers' }
+    if (raw === 'adsTrackersAndCookies' || raw === 'all') { s.set('adBlocker', 'aggressive'); return 'aggressive' }
+    return raw
   })
 
   handle('config-set-adblocker', async (mode: string) => {

@@ -4,6 +4,7 @@
   .curved-line-shadow {
     transform: translate(1px, 1px);
   }
+
   :root {
     --primary: #a0a0a0;
     --primary-foreground: #1a1a1a;
@@ -33,31 +34,31 @@
   }
 
   .dark {
-    --primary: #888888;
+    --primary: #b0b0b0;
     --primary-foreground: #1a1a1a;
-    --foreground: #a0a0a0;
+    --foreground: #e8e8e8;
     --background: #1a1a1a;
     --background2: #1a1a1a;
-    --accent: #cccccc;
+    --accent: #e0e0e0;
     --card: #1e1e1e;
-    --card-foreground: #a0a0a0;
+    --card-foreground: #e0e0e0;
     --popover: #1e1e1e;
-    --popover-foreground: #a0a0a0;
+    --popover-foreground: #e0e0e0;
     --secondary: #222222;
-    --secondary-foreground: #a0a0a0;
+    --secondary-foreground: #e0e0e0;
     --muted: #555555;
-    --muted-foreground: #a0a0a0;
+    --muted-foreground: #c8c8c8;
     --destructive: #888888;
     --destructive-foreground: #fff;
     --border: #2a2a2a;
     --input: #222222;
-    --ring: #666666;
+    --ring: #888888;
     --radius: 0.5rem;
-    --text-low: #666666;
-    --text-main: #a0a0a0;
+    --text-low: #999999;
+    --text-main: #e8e8e8;
 
-    --blue: #888888;
-    --blue2: #999999;
+    --blue: #aaaaaa;
+    --blue2: #bbbbbb;
   }
 
   * {
@@ -79,10 +80,14 @@
       background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
       color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     /* Prevent text selection globally for native app feel */
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE 10+/Edge */
-    user-select: none; /* Standard */
+    -webkit-user-select: none;
+    /* Safari */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* IE 10+/Edge */
+    user-select: none;
+    /* Standard */
   }
 
   html,
@@ -97,6 +102,7 @@
 
 /* Electron Specific Styles */
 @layer components {
+
   /* Electron drag regions */
   .drag-region {
     -webkit-app-region: drag;
@@ -137,7 +143,8 @@
 
   /* Sidebar width utilities */
   .w-55 {
-    width: 13.75rem; /* 220px */
+    width: 13.75rem;
+    /* 220px */
   }
 
   /* Smooth scrollbar */
@@ -191,6 +198,7 @@
       opacity: 0;
       transform: translateY(10px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -202,6 +210,7 @@
       opacity: 0;
       transform: translateY(10px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -213,6 +222,7 @@
       transform: translateY(30px);
       opacity: 0;
     }
+
     to {
       transform: translateY(0);
       opacity: 1;
@@ -224,6 +234,7 @@
       transform: scale(0.9);
       opacity: 0;
     }
+
     to {
       transform: scale(1);
       opacity: 1;
@@ -231,23 +242,36 @@
   }
 
   @keyframes gradient-x {
+
     0%,
     100% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
   }
 
   @keyframes shake {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateX(0);
     }
-    10%, 30%, 50%, 70%, 90% {
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
       transform: translateX(-4px);
     }
-    20%, 40%, 60%, 80% {
+
+    20%,
+    40%,
+    60%,
+    80% {
       transform: translateX(4px);
     }
   }
@@ -265,6 +289,7 @@
     0% {
       transform: translateX(-100%) skewX(-12deg);
     }
+
     100% {
       transform: translateX(200%) skewX(-12deg);
     }
@@ -350,6 +375,7 @@
     opacity: 0;
     transform: translateY(-10px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -361,6 +387,7 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+
   to {
     opacity: 0;
     transform: translateY(-10px) scale(0.95);
@@ -432,12 +459,15 @@
 
 /* Default - hide scrollbars globally */
 * {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
 }
 
 *::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
+  /* Chrome/Safari */
 }
 
 /* Optional: Show scrollbars only where needed */
@@ -590,9 +620,11 @@ svg {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -602,6 +634,7 @@ svg {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -624,6 +657,7 @@ svg {
     opacity: 0;
     transform: scale(0.95) translateY(-10px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -635,6 +669,7 @@ svg {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+
   100% {
     opacity: 0;
     transform: scale(0.95) translateY(-10px);
@@ -743,11 +778,11 @@ svg {
 }
 
 /* При активации: показать активный градиент */
-.switch input:checked + .switch-slider::before {
+.switch input:checked+.switch-slider::before {
   opacity: 0;
 }
 
-.switch input:checked + .switch-slider::after {
+.switch input:checked+.switch-slider::after {
   opacity: 1;
 }
 
@@ -781,11 +816,11 @@ svg {
   opacity: 0;
 }
 
-.switch input:checked ~ .switch-dot-glass .switch-dot-glass-filter {
+.switch input:checked~.switch-dot-glass .switch-dot-glass-filter {
   animation: filter-on 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.switch input:not(:checked) ~ .switch-dot-glass .switch-dot-glass-filter {
+.switch input:not(:checked)~.switch-dot-glass .switch-dot-glass-filter {
   animation: filter-off 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -807,37 +842,37 @@ svg {
     inset -1px -1px 0 rgba(82, 190, 121, 0);
 }
 
-.switch input:checked ~ .switch-dot-glass {
+.switch input:checked~.switch-dot-glass {
   transform: scale(1) translateX(18px) rotateY(0deg);
   background-color: rgba(255, 255, 255, 1);
 }
 
-.switch input:not(:checked) ~ .switch-dot-glass {
+.switch input:not(:checked)~.switch-dot-glass {
   transform: scale(1) translateX(0) rotateY(0deg);
   background-color: rgba(255, 255, 255, 1);
 }
 
-.switch input:checked ~ .switch-dot-glass-animated {
+.switch input:checked~.switch-dot-glass-animated {
   animation: dot-on 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.switch input:not(:checked) ~ .switch-dot-glass-animated {
+.switch input:not(:checked)~.switch-dot-glass-animated {
   animation: dot-off 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.switch input:checked ~ .switch-dot-glass-animated .switch-dot-glass-specular {
+.switch input:checked~.switch-dot-glass-animated .switch-dot-glass-specular {
   animation: filter-specular-on 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.switch input:not(:checked) ~ .switch-dot-glass-animated .switch-dot-glass-specular {
+.switch input:not(:checked)~.switch-dot-glass-animated .switch-dot-glass-specular {
   animation: filter-specular-off 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.switch input:checked ~ .switch-dot-glass-animated .switch-dot-glass-filter {
+.switch input:checked~.switch-dot-glass-animated .switch-dot-glass-filter {
   animation: filter-on 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.switch input:not(:checked) ~ .switch-dot-glass-animated .switch-dot-glass-filter {
+.switch input:not(:checked)~.switch-dot-glass-animated .switch-dot-glass-filter {
   animation: filter-off 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -845,18 +880,23 @@ svg {
   0% {
     transform: scale(1) translateX(0) rotateY(0deg);
   }
+
   12% {
     transform: scale(1.6) translateX(0) rotateY(-33deg);
   }
+
   50% {
     transform: scale(1.6) translateX(18px) rotateY(-33deg);
   }
+
   82% {
     background-color: rgba(255, 255, 255, 0.1);
   }
+
   90% {
     background-color: rgba(255, 255, 255, 0.7);
   }
+
   100% {
     transform: scale(1) translateX(18px) rotateY(0deg);
     background-color: rgba(255, 255, 255, 1);
@@ -867,18 +907,23 @@ svg {
   0% {
     transform: scale(1) translateX(18px) rotateY(0deg);
   }
+
   12% {
     transform: scale(1.6) translateX(18px) rotateY(33deg);
   }
+
   50% {
     transform: scale(1.6) translateX(0) rotateY(33deg);
   }
+
   82% {
     background-color: rgba(255, 255, 255, 0.1);
   }
+
   90% {
     background-color: rgba(255, 255, 255, 0.7);
   }
+
   100% {
     transform: scale(1) translateX(0) rotateY(0deg);
     background-color: rgba(255, 255, 255, 1);
@@ -889,12 +934,15 @@ svg {
   0% {
     opacity: 0;
   }
+
   12% {
     opacity: 1;
   }
+
   80% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -904,12 +952,15 @@ svg {
   0% {
     opacity: 0;
   }
+
   12% {
     opacity: 1;
   }
+
   80% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -923,6 +974,7 @@ svg {
       inset 0 0 22px rgba(255, 255, 255, 0),
       inset -1px -1px 0 rgba(82, 190, 121, 0);
   }
+
   12% {
     box-shadow:
       inset 1px 1px 0 rgba(82, 190, 121, 0.2),
@@ -930,6 +982,7 @@ svg {
       inset 0 0 22px rgba(255, 255, 255, 0.6),
       inset -1px -1px 0 rgba(82, 190, 121, 0.12);
   }
+
   80% {
     box-shadow:
       inset 1px 1px 0 rgba(82, 190, 121, 0.2),
@@ -937,6 +990,7 @@ svg {
       inset 0 0 22px rgba(255, 255, 255, 0.6),
       inset -1px -1px 0 rgba(82, 190, 121, 0.12);
   }
+
   100% {
     box-shadow:
       inset 1px 1px 0 rgba(82, 190, 121, 0),
@@ -954,6 +1008,7 @@ svg {
       inset 0 0 22px rgba(255, 255, 255, 0),
       inset -1px -1px 0 rgba(82, 190, 121, 0);
   }
+
   12% {
     box-shadow:
       inset 1px 1px 0 rgba(82, 190, 121, 0.2),
@@ -961,6 +1016,7 @@ svg {
       inset 0 0 22px rgba(255, 255, 255, 0.6),
       inset -1px -1px 0 rgba(82, 190, 121, 0.12);
   }
+
   80% {
     box-shadow:
       inset 1px 1px 0 rgba(82, 190, 121, 0.2),
@@ -968,6 +1024,7 @@ svg {
       inset 0 0 22px rgba(255, 255, 255, 0.6),
       inset -1px -1px 0 rgba(82, 190, 121, 0.12);
   }
+
   100% {
     box-shadow:
       inset 1px 1px 0 rgba(82, 190, 121, 0),

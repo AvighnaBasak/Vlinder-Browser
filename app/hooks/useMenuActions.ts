@@ -34,6 +34,11 @@ export function useMenuActions(opts: UseMenuActionsOptions) {
       setActiveTab('downloads')
     }
 
+    const handleNavigateToHistory = () => {
+      setActiveTab('settings')
+      window.dispatchEvent(new CustomEvent('navigate-settings-section', { detail: 'history' }))
+    }
+
     const handleToggleSidebar = () => {
       window.dispatchEvent(new CustomEvent('toggle-sidebar-visibility'))
     }
@@ -97,6 +102,9 @@ export function useMenuActions(opts: UseMenuActionsOptions) {
       // Then add new listeners
       ;(window as any).electronAPI.onNavigateToSettings(handleNavigateToSettings)
       ;(window as any).electronAPI.onNavigateToDownloads(handleNavigateToDownloads)
+      if ((window as any).electronAPI.onNavigateToHistory) {
+        ;(window as any).electronAPI.onNavigateToHistory(handleNavigateToHistory)
+      }
       ;(window as any).electronAPI.onToggleSidebar(handleToggleSidebar)
       ;(window as any).electronAPI.onToggleCommandPalette(handleToggleCommandPalette)
       ;(window as any).electronAPI.onNextTab(handleNextTab)

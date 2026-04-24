@@ -1,4 +1,4 @@
-import { BrowserWindow, shell, app, session, Menu, MenuItem, ipcMain } from 'electron'
+import { BrowserWindow, shell, app, session, Menu, MenuItem, ipcMain, WebContents } from 'electron'
 import { join } from 'path'
 import appIcon from '@/resources/build/icon.png?asset'
 import { registerResourcesProtocol } from './protocols'
@@ -75,6 +75,13 @@ function setupMenu(mainWindow: BrowserWindow) {
             accelerator: getCurrentShortcut('browser.openDownloads'),
             click: () => {
               mainWindow.webContents.send('navigate-to-downloads')
+            },
+          },
+          {
+            label: 'History',
+            accelerator: getCurrentShortcut('browser.openHistory'),
+            click: () => {
+              mainWindow.webContents.send('navigate-to-history')
             },
           },
           ...(isMac
@@ -432,8 +439,99 @@ export function createAppWindow(): BrowserWindow {
     return { action: 'deny' }
   })
 
+  // Detect likely ad/redirect URLs when content blocking is active
+  function isLikelyAdRedirect(targetUrl: string, sourceUrl: string): boolean {
+    try {
+      const target = new URL(targetUrl)
+      const source = new URL(sourceUrl)
+      const targetHost = target.hostname.toLowerCase()
+      const targetPath = (target.pathname + target.search).toLowerCase()
+
+      // Block known ad/redirect TLDs with random-looking domains
+      const suspiciousTLDs = ['.cfd', '.buzz', '.top', '.xyz', '.click', '.link', '.club', '.icu', '.live', '.surf', '.rest', '.monster', '.sbs', '.cyou']
+      if (suspiciousTLDs.some(tld => targetHost.endsWith(tld))) {
+        return true
+      }
+
+      // Block known ad/redirect URL patterns
+      const adPatterns = [
+        /\/partitial\//i,
+        /\/link\d\?/i,
+        /redirect.*\?.*var[_=]/i,
+        /scontext_r=/i,
+        /prfrev=/i,
+        /northb?_fallback/i,
+        /popunder/i,
+        /popads/i,
+        /\/afu\.php/i,
+        /\/go\.php\?/i,
+        /\/out\.php\?/i,
+        /\/redirect\//i,
+        /clickid=/i,
+        /subid=/i,
+        /zoneid=/i,
+        /bannerid=/i,
+      ]
+      if (adPatterns.some(pattern => pattern.test(targetUrl))) {
+        return true
+      }
+
+      // Block known ad/redirect domains
+      const adDomains = [
+        'doubleclick.net', 'googlesyndication.com', 'googleadservices.com',
+        'adservice.google.com', 'ads.yahoo.com', 'adnxs.com',
+        'taboola.com', 'outbrain.com', 'propellerads.com',
+        'popcash.net', 'popads.net', 'juicyads.com',
+        'exoclick.com', 'trafficjunky.com', 'revcontent.com',
+        'mgid.com', 'content.ad', 'adf.ly', 'bit.ly',
+        'shorte.st', 'linkvertise.com', 'ouo.io',
+        'bc.vc', 'earnow.online',
+      ]
+      if (adDomains.some(d => targetHost === d || targetHost.endsWith('.' + d))) {
+        return true
+      }
+
+      // Block betting/casino domains
+      const bettingPatterns = [
+        /bet365|1xbet|betwinner|melbet|mostbet|22bet|pinnacle|betway|stake\.com/i,
+        /casino|poker|slots|jackpot|wager|gambl/i,
+      ]
+      if (bettingPatterns.some(p => p.test(targetHost))) {
+        return true
+      }
+    } catch {
+      return false
+    }
+    return false
+  }
+
+  // ── Throttle gate: rate-limit window.open per webContents ──
+  const popupTimestamps = new WeakMap<WebContents, number[]>()
+  const POPUP_THROTTLE_MS = 2000
+  const POPUP_THROTTLE_MAX = 1
+
+  function isPopupThrottled(wc: WebContents): boolean {
+    const now = Date.now()
+    let stamps = popupTimestamps.get(wc)
+    if (!stamps) {
+      stamps = []
+      popupTimestamps.set(wc, stamps)
+    }
+    while (stamps.length > 0 && now - stamps[0] > POPUP_THROTTLE_MS) {
+      stamps.shift()
+    }
+    if (stamps.length >= POPUP_THROTTLE_MAX) {
+      return true
+    }
+    stamps.push(now)
+    return false
+  }
+
   // Handle webview security and external links
   app.on('web-contents-created', (_, contents) => {
+    // Increase max listeners to prevent warnings from multiple event handlers
+    contents.setMaxListeners(20)
+
     // Handle webview tags
     contents.on('will-attach-webview', (_event, webPreferences) => {
       // Disable node integration in webviews for security
@@ -474,6 +572,13 @@ export function createAppWindow(): BrowserWindow {
         const isSameService = isSameServiceDomain(currentDomain, targetDomain)
 
         if (currentDomain !== targetDomain && !isSameService) {
+          // When content blocking is active, block suspicious redirect URLs
+          const blockingMode = contentBlocker.getMode()
+          if (blockingMode !== 'disabled' && isLikelyAdRedirect(navigationUrl, currentUrl)) {
+            event.preventDefault()
+            return
+          }
+
           // This is an external link - check if it should be background
           const isBackground = backgroundUrls.has(navigationUrl)
 
@@ -537,7 +642,13 @@ export function createAppWindow(): BrowserWindow {
 
     // Handle new window requests (target="_blank" links)
     contents.setWindowOpenHandler((details) => {
+      // Throttle gate: block rapid-fire popup bombs (>1 per 2s per webview)
+      if (isPopupThrottled(contents)) {
+        return { action: 'deny' }
+      }
+
       const { disposition, features } = details
+      const blockingMode = contentBlocker.getMode()
 
       // Parse window features (width, height, etc.)
       const parsedFeatures: Record<string, string | number> = {}
@@ -550,12 +661,31 @@ export function createAppWindow(): BrowserWindow {
         })
       }
 
+      // When content blocking is active, block any cross-origin ad redirect
+      if (blockingMode !== 'disabled' && isLikelyAdRedirect(details.url, contents.getURL())) {
+        return { action: 'deny' }
+      }
+
       // Check if this is a popup (has dimensions or explicit popup feature)
       const isPopup =
         parsedFeatures.popup === '1' || parsedFeatures.width || parsedFeatures.height || disposition === 'new-window'
 
       if (isPopup) {
-        // Allow popup windows for authentication/login
+        // When content blocking is active, only allow same-origin popups (auth flows)
+        if (blockingMode !== 'disabled') {
+          try {
+            const openerUrl = contents.getURL()
+            const popupUrl = details.url
+            const openerOrigin = new URL(openerUrl).origin
+            const popupOrigin = new URL(popupUrl).origin
+            if (openerOrigin !== popupOrigin) {
+              return { action: 'deny' }
+            }
+          } catch {
+            return { action: 'deny' }
+          }
+        }
+
         return {
           action: 'allow',
           outlivesOpener: true,
@@ -575,17 +705,33 @@ export function createAppWindow(): BrowserWindow {
         }
       }
 
+      // When content blocking is active, also block cross-origin "other" dispositions
+      // (e.g. script-triggered foreground/background tabs that aren't user clicks)
+      if (blockingMode !== 'disabled' && disposition === 'other') {
+        try {
+          const openerOrigin = new URL(contents.getURL()).origin
+          const targetOrigin = new URL(details.url).origin
+          if (openerOrigin !== targetOrigin) {
+            return { action: 'deny' }
+          }
+        } catch {
+          return { action: 'deny' }
+        }
+      }
+
       // For regular links, create temporary app as before
       mainWindow.webContents.send('external-link-navigation', {
         url: details.url,
         currentUrl: contents.getURL(),
-        title: '', // Title will be fetched when the temporary app loads
+        title: '',
       })
       return { action: 'deny' }
     })
 
     // Inject script to hide scrollbars in webviews
     contents.on('did-finish-load', () => {
+      if (contents.isDestroyed()) return
+
       contents
         .executeJavaScript(
           `
@@ -613,9 +759,78 @@ export function createAppWindow(): BrowserWindow {
       `,
           true
         )
-        .catch(() => {
-          // Ignore errors
-        })
+        .catch(() => {})
+
+      if (contents.isDestroyed()) return
+
+      // Inject fullscreen helper to ensure fullscreen works for all video/game players
+      contents
+        .executeJavaScript(
+          `
+        (function() {
+          if (window.__vlinder_fs_helper) return;
+          window.__vlinder_fs_helper = true;
+
+          // Ensure the Fullscreen API works by polyfilling vendor-prefixed methods
+          if (!Element.prototype.requestFullscreen) {
+            Element.prototype.requestFullscreen =
+              Element.prototype.webkitRequestFullscreen ||
+              Element.prototype.mozRequestFullScreen ||
+              Element.prototype.msRequestFullscreen ||
+              function() { return Promise.reject(new Error('Fullscreen not supported')); };
+          }
+          if (!document.exitFullscreen) {
+            document.exitFullscreen =
+              document.webkitExitFullscreen ||
+              document.mozCancelFullScreen ||
+              document.msExitFullscreen ||
+              function() { return Promise.reject(new Error('Fullscreen not supported')); };
+          }
+
+          // Override requestFullscreen to ensure it works on any element
+          const origRequestFullscreen = Element.prototype.requestFullscreen;
+          Element.prototype.requestFullscreen = function(options) {
+            try {
+              return origRequestFullscreen.call(this, options);
+            } catch(e) {
+              // If the element itself can't go fullscreen, try document.documentElement
+              if (this !== document.documentElement) {
+                return origRequestFullscreen.call(document.documentElement, options);
+              }
+              throw e;
+            }
+          };
+
+          // For iframes - ensure they have allowfullscreen attribute
+          const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+              for (const node of mutation.addedNodes) {
+                if (node.nodeName === 'IFRAME' || (node.querySelectorAll && node.querySelectorAll('iframe').length > 0)) {
+                  const iframes = node.nodeName === 'IFRAME' ? [node] : node.querySelectorAll('iframe');
+                  for (const iframe of iframes) {
+                    if (!iframe.hasAttribute('allowfullscreen')) {
+                      iframe.setAttribute('allowfullscreen', '');
+                      iframe.setAttribute('allow', (iframe.getAttribute('allow') || '') + '; fullscreen');
+                    }
+                  }
+                }
+              }
+            }
+          });
+          observer.observe(document.documentElement, { childList: true, subtree: true });
+
+          // Set allowfullscreen on existing iframes
+          document.querySelectorAll('iframe').forEach(function(iframe) {
+            if (!iframe.hasAttribute('allowfullscreen')) {
+              iframe.setAttribute('allowfullscreen', '');
+              iframe.setAttribute('allow', (iframe.getAttribute('allow') || '') + '; fullscreen');
+            }
+          });
+        })();
+      `,
+          true
+        )
+        .catch(() => {})
     })
   })
 

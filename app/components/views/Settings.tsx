@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import SettingsSidebar from './settings/SettingsSidebar'
 import SettingsContent from './settings/SettingsContent'
 
@@ -64,6 +64,15 @@ export default function Settings({
   onNavigate,
 }: SettingsProps) {
   const [activeSection, setActiveSection] = useState('notifications')
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const section = (e as CustomEvent).detail
+      if (section) setActiveSection(section)
+    }
+    window.addEventListener('navigate-settings-section', handler)
+    return () => window.removeEventListener('navigate-settings-section', handler)
+  }, [])
 
   if (!isActive) return null
 

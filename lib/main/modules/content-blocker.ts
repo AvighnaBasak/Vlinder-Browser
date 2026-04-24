@@ -1,7 +1,7 @@
 import { ElectronBlocker } from '@ghostery/adblocker-electron'
-import { Session, WebContents, app } from 'electron'
+import { Session, WebContents, app, ipcMain } from 'electron'
 
-export type AdBlockMode = 'disabled' | 'adsOnly' | 'adsAndTrackers' | 'adsTrackersAndCookies' | 'aggressive'
+export type AdBlockMode = 'disabled' | 'adsAndTrackers' | 'aggressive'
 
 let Store: any = null
 let store: any = null
@@ -14,6 +14,13 @@ async function initStore() {
   }
   return store
 }
+
+// ─── Filter list URLs (industry-standard, updated daily) ───
+const EASYLIST_URL = 'https://easylist.to/easylist/easylist.txt'
+const EASYPRIVACY_URL = 'https://easylist.to/easylist/easyprivacy.txt'
+const FANBOY_ANNOYANCES_URL = 'https://easylist.to/easylist/fanboy-annoyance.txt'
+const PETER_LOWE_URL =
+  'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext'
 
 const YT_AD_DOMAINS = [
   'doubleclick.net',
@@ -91,7 +98,7 @@ const COOKIE_CONSENT_DOMAINS = [
   'iubenda.com',
 ]
 
-// Script injected into YouTube pages to skip ads
+// ─── YouTube ad-skip script ───
 const YT_AD_SKIP_SCRIPT = `
 (function() {
   'use strict';
@@ -99,28 +106,23 @@ const YT_AD_SKIP_SCRIPT = `
   window.__vlinder_yt_adblock = true;
 
   const skipAd = () => {
-    // Click skip button if present
     const skipBtn = document.querySelector('.ytp-skip-ad-button, .ytp-ad-skip-button, .ytp-ad-skip-button-modern, [id="skip-button:"] button, .ytp-ad-skip-button-slot button');
     if (skipBtn) { skipBtn.click(); return; }
 
-    // Close overlay ads
     const closeBtn = document.querySelector('.ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container');
     if (closeBtn) { closeBtn.click(); }
 
-    // Force-skip unskippable video ads by seeking to end
     const video = document.querySelector('video');
     const adContainer = document.querySelector('.ad-showing, .ad-interrupting');
     if (video && adContainer && video.duration && isFinite(video.duration)) {
       video.currentTime = video.duration;
     }
 
-    // Remove ad overlay elements
     document.querySelectorAll('.ytp-ad-module, .ytp-ad-overlay-container, .ytp-ad-text-overlay, .video-ads, #player-ads, #masthead-ad, ytd-promoted-sparkles-web-renderer, ytd-display-ad-renderer, ytd-promoted-video-renderer, ytd-ad-slot-renderer, ytd-in-feed-ad-layout-renderer, ytd-banner-promo-renderer, tp-yt-paper-dialog:has(.ytd-popup-container), #panels:has(ytd-ads-engagement-panel-content-renderer)').forEach(el => {
       el.remove();
     });
   };
 
-  // Remove ad-related styles and overlays via CSS
   const style = document.createElement('style');
   style.textContent = \`
     .ad-showing .video-stream { display: none !important; }
@@ -134,16 +136,13 @@ const YT_AD_SKIP_SCRIPT = `
   \`;
   document.head.appendChild(style);
 
-  // MutationObserver to catch dynamically added ads
   const observer = new MutationObserver(() => { skipAd(); });
   observer.observe(document.body, { childList: true, subtree: true });
-
-  // Periodic check as backup
   setInterval(skipAd, 500);
 })();
 `
 
-// Script to auto-dismiss cookie consent banners
+// ─── Cookie consent auto-dismiss ───
 const COOKIE_DISMISS_SCRIPT = `
 (function() {
   'use strict';
@@ -179,7 +178,6 @@ const COOKIE_DISMISS_SCRIPT = `
         return;
       }
     }
-    // Hide common cookie banner containers
     document.querySelectorAll('#onetrust-banner-sdk, #CybotCookiebotDialog, .cookie-consent-banner, .cookie-notice, .cookie-banner, [class*="cookie-consent"], [id*="cookie-consent"], [class*="cookie-banner"], [id*="cookie-banner"], .cc-window').forEach(el => {
       el.style.display = 'none';
     });
@@ -191,6 +189,161 @@ const COOKIE_DISMISS_SCRIPT = `
 
   const observer = new MutationObserver(() => { dismissBanners(); });
   observer.observe(document.body, { childList: true, subtree: true });
+})();
+`
+
+// ─── Popup, redirect & clickjacking defense script ───
+const POPUP_REDIRECT_BLOCK_SCRIPT = `
+(function() {
+  'use strict';
+  if (window.__vlinder_popup_block) return;
+  window.__vlinder_popup_block = true;
+
+  // ── 1. User-gesture tracking ──
+  let lastUserInteraction = 0;
+  const USER_GESTURE_WINDOW = 1000;
+  const gestureEvents = ['click', 'keydown', 'submit', 'touchend', 'mousedown'];
+  gestureEvents.forEach(evt => {
+    document.addEventListener(evt, () => { lastUserInteraction = Date.now(); }, true);
+  });
+
+  function isUserInitiated() {
+    return (Date.now() - lastUserInteraction) < USER_GESTURE_WINDOW;
+  }
+
+  // ── 2. Block window.open unless user-initiated ──
+  const origOpen = window.open;
+  window.open = function(url, target, features) {
+    if (isUserInitiated()) {
+      return origOpen.call(window, url, target, features);
+    }
+    return null;
+  };
+
+  // ── 3. Block programmatic click() on target="_blank" anchors ──
+  const origClick = HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click = function() {
+    if (this.target === '_blank' && !isUserInitiated()) {
+      return;
+    }
+    return origClick.call(this);
+  };
+
+  // ── 4. Block programmatic dispatchEvent on target="_blank" anchors ──
+  const origDispatchEvent = EventTarget.prototype.dispatchEvent;
+  EventTarget.prototype.dispatchEvent = function(event) {
+    if (event.type === 'click' && this instanceof HTMLAnchorElement &&
+        this.target === '_blank' && !isUserInitiated()) {
+      return false;
+    }
+    return origDispatchEvent.call(this, event);
+  };
+
+  // ── 5. Clickjacking / invisible overlay defense ──
+  // Detect elements covering >90% of viewport with near-zero opacity
+  // and neutralize them with pointer-events: none
+  function neutralizeClickjackOverlays() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const threshold = 0.9;
+
+    const allEls = document.querySelectorAll('div, section, aside, span, a, iframe');
+    for (const el of allEls) {
+      const style = window.getComputedStyle(el);
+      const opacity = parseFloat(style.opacity);
+      if (opacity >= 0.1) continue;
+
+      const rect = el.getBoundingClientRect();
+      if (rect.width < vw * threshold || rect.height < vh * threshold) continue;
+
+      const zIndex = parseInt(style.zIndex, 10);
+      if (isNaN(zIndex) || zIndex < 1) continue;
+
+      el.style.setProperty('pointer-events', 'none', 'important');
+      el.style.setProperty('display', 'none', 'important');
+    }
+  }
+
+  // Run on load + observe for dynamically added overlays
+  setTimeout(neutralizeClickjackOverlays, 500);
+  setTimeout(neutralizeClickjackOverlays, 2000);
+
+  const overlayObserver = new MutationObserver(() => {
+    neutralizeClickjackOverlays();
+  });
+  overlayObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+  // ── 6. Event listener hijacking (capturing phase) ──
+  // Trap clicks on suspicious elements before they can trigger popups
+  window.addEventListener('click', function(event) {
+    const target = event.target;
+    if (!target || !target.tagName) return;
+
+    // Check if target is a huge transparent anchor (common clickjack trick)
+    if (target.tagName === 'A') {
+      const style = window.getComputedStyle(target);
+      const opacity = parseFloat(style.opacity);
+      const rect = target.getBoundingClientRect();
+      if (opacity < 0.1 && rect.width > window.innerWidth * 0.5 && rect.height > window.innerHeight * 0.5) {
+        event.stopPropagation();
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Block clicks on dynamically created off-screen or invisible iframes
+    if (target.tagName === 'IFRAME') {
+      const rect = target.getBoundingClientRect();
+      if (rect.width <= 1 || rect.height <= 1) {
+        event.stopPropagation();
+        event.preventDefault();
+        return;
+      }
+    }
+  }, true);
+
+  // ── 7. Frame-busting protection ──
+  // Prevent the page from being framed by malicious sites
+  try {
+    if (top !== self) {
+      // We're in a frame — check if the framing site is same-origin
+      try {
+        // Accessing top.location will throw if cross-origin
+        void top.location.hostname;
+      } catch {
+        // Cross-origin frame — break out
+        top.location = self.location;
+      }
+    }
+  } catch {}
+
+  // ── 8. Block meta refresh redirects ──
+  function removeMetaRefreshes() {
+    document.querySelectorAll('meta[http-equiv="refresh"]').forEach(el => {
+      const content = el.getAttribute('content') || '';
+      if (content.includes('url=') && !content.startsWith('0;')) {
+        el.remove();
+      }
+    });
+  }
+  removeMetaRefreshes();
+
+  const metaObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeName === 'META') {
+          const httpEquiv = node.getAttribute && node.getAttribute('http-equiv');
+          if (httpEquiv && httpEquiv.toLowerCase() === 'refresh') {
+            const content = node.getAttribute('content') || '';
+            if (content.includes('url=') && !content.startsWith('0;')) {
+              node.remove();
+            }
+          }
+        }
+      }
+    }
+  });
+  metaObserver.observe(document.documentElement, { childList: true, subtree: true });
 })();
 `
 
@@ -210,13 +363,11 @@ class ContentBlocker {
       if (lower.includes(domain)) return true
     }
 
-    if (mode === 'adsAndTrackers' || mode === 'adsTrackersAndCookies' || mode === 'aggressive') {
-      for (const domain of TRACKING_DOMAINS) {
-        if (lower.includes(domain)) return true
-      }
+    for (const domain of TRACKING_DOMAINS) {
+      if (lower.includes(domain)) return true
     }
 
-    if (mode === 'adsTrackersAndCookies' || mode === 'aggressive') {
+    if (mode === 'aggressive') {
       for (const domain of COOKIE_CONSENT_DOMAINS) {
         if (lower.includes(domain)) return true
       }
@@ -248,21 +399,33 @@ class ContentBlocker {
     if (this.blockerInstancePromise) {
       await this.teardown()
     }
+
+    // Use fromLists with real filter lists for comprehensive blocking
+    const lists: string[] = []
     switch (mode) {
       case 'aggressive':
-      case 'adsTrackersAndCookies':
-        this.blockerInstancePromise = ElectronBlocker.fromPrebuiltFull()
+        lists.push(EASYLIST_URL, EASYPRIVACY_URL, FANBOY_ANNOYANCES_URL, PETER_LOWE_URL)
         break
       case 'adsAndTrackers':
-        this.blockerInstancePromise = ElectronBlocker.fromPrebuiltAdsAndTracking()
-        break
-      case 'adsOnly':
-        this.blockerInstancePromise = ElectronBlocker.fromPrebuiltAdsOnly()
+        lists.push(EASYLIST_URL, EASYPRIVACY_URL)
         break
       default:
         this.blockerInstancePromise = undefined
-        break
+        return undefined as any
     }
+
+    this.blockerInstancePromise = ElectronBlocker.fromLists(
+      fetch,
+      lists,
+      { enableCompression: true },
+    ).catch(() => {
+      // Fall back to prebuilt if list fetch fails
+      if (mode === 'aggressive') {
+        return ElectronBlocker.fromPrebuiltFull()
+      }
+      return ElectronBlocker.fromPrebuiltAdsAndTracking()
+    })
+
     return this.blockerInstancePromise as Promise<ElectronBlocker>
   }
 
@@ -275,12 +438,10 @@ class ContentBlocker {
         return
       }
 
-      if (mode === 'aggressive' || mode === 'adsAndTrackers' || mode === 'adsTrackersAndCookies') {
-        const stripped = this.stripTrackingParams(details.url)
-        if (stripped) {
-          callback({ redirectURL: stripped })
-          return
-        }
+      const stripped = this.stripTrackingParams(details.url)
+      if (stripped) {
+        callback({ redirectURL: stripped })
+        return
       }
 
       callback({})
@@ -288,7 +449,7 @@ class ContentBlocker {
 
     ses.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, this.requestHandler)
 
-    if (mode === 'adsTrackersAndCookies' || mode === 'aggressive') {
+    if (mode === 'aggressive') {
       this.headerHandler = (details: any, callback: any) => {
         const headers = { ...details.responseHeaders }
         delete headers['set-cookie']
@@ -313,30 +474,50 @@ class ContentBlocker {
   private setupScriptInjection(): void {
     app.on('web-contents-created', (_, contents) => {
       if (contents.getType() === 'webview') {
-        contents.on('did-finish-load', () => {
-          this.injectScripts(contents)
+        // Inject popup defense as early as possible — did-navigate fires before DOMContentLoaded
+        contents.on('did-navigate', () => {
+          if (contents.isDestroyed()) return
+          this.injectPopupDefense(contents)
         })
         contents.on('did-navigate-in-page', () => {
-          this.injectScripts(contents)
+          if (contents.isDestroyed()) return
+          this.injectPopupDefense(contents)
+        })
+        // Fallback: re-inject at dom-ready in case did-navigate was too early for the context
+        contents.on('dom-ready', () => {
+          if (contents.isDestroyed()) return
+          this.injectPopupDefense(contents)
+        })
+        // Page-specific scripts (YouTube, cookies) need DOM elements, so inject at did-finish-load
+        contents.on('did-finish-load', () => {
+          if (contents.isDestroyed()) return
+          this.injectPageSpecificScripts(contents)
         })
       }
     })
   }
 
-  private injectScripts(contents: WebContents): void {
+  private injectPopupDefense(contents: WebContents): void {
+    if (this.blockerMode === 'disabled') return
+    try {
+      if (contents.isDestroyed()) return
+      contents.executeJavaScript(POPUP_REDIRECT_BLOCK_SCRIPT).catch(() => {})
+    } catch {}
+  }
+
+  private injectPageSpecificScripts(contents: WebContents): void {
     const mode = this.blockerMode
     if (mode === 'disabled') return
     try {
+      if (contents.isDestroyed()) return
       const url = contents.getURL()
       if (url.includes('youtube.com') || url.includes('youtu.be')) {
         contents.executeJavaScript(YT_AD_SKIP_SCRIPT).catch(() => {})
       }
-      if (mode === 'adsTrackersAndCookies' || mode === 'aggressive') {
+      if (mode === 'aggressive') {
         contents.executeJavaScript(COOKIE_DISMISS_SCRIPT).catch(() => {})
       }
-    } catch {
-      // webContents may be destroyed
-    }
+    } catch {}
   }
 
   private async teardown(): Promise<void> {
@@ -349,24 +530,40 @@ class ContentBlocker {
     if (this.blockedSession) {
       this.removeRequestInterception(this.blockedSession)
     }
+    this.removeCosmeticFilterHandler()
     this.blockedSession = undefined
     this.blockerInstancePromise = undefined
+  }
+
+  private migrateMode(raw: string): AdBlockMode {
+    if (raw === 'all' || raw === 'adsTrackersAndCookies') return 'aggressive'
+    if (raw === 'adsOnly') return 'adsAndTrackers'
+    if (raw === 'adsAndTrackers' || raw === 'aggressive') return raw as AdBlockMode
+    return 'disabled'
   }
 
   public async updateConfig(session: Session): Promise<void> {
     const s = await initStore()
     const raw = s.get('adBlocker', 'disabled') as string
-    const mode = ((raw === 'all' ? 'aggressive' : raw) as AdBlockMode) || 'disabled'
+    const mode = this.migrateMode(raw)
+    if (mode !== raw) s.set('adBlocker', mode)
 
     await this.teardown()
     this.blockerMode = mode
 
-    if (mode === 'disabled') return
+    // Always keep fallback handlers registered so webviews never hit "No handler"
+    this.ensureCosmeticFilterHandler()
+
+    if (mode === 'disabled') {
+      return
+    }
 
     this.blockedSession = session
 
     const blocker = await this.createGhosteryBlocker(mode)
     if (blocker) {
+      // Atomic swap: remove fallback, immediately register real handlers
+      this.removeCosmeticFilterHandler()
       blocker.enableBlockingInSession(session)
     }
 
@@ -374,14 +571,30 @@ class ContentBlocker {
   }
 
   public async initialize(session: Session): Promise<void> {
-    const s = await initStore()
-    // Migrate old 'all' mode to new 'aggressive'
-    const raw = s.get('adBlocker', 'disabled') as string
-    const mode = (raw === 'all' ? 'aggressive' : raw) as AdBlockMode
-    if (raw === 'all') s.set('adBlocker', 'aggressive')
-    this.blockerMode = mode || 'disabled'
     this.setupScriptInjection()
     await this.updateConfig(session)
+  }
+
+  private ensureCosmeticFilterHandler(): void {
+    try {
+      ipcMain.handle('@ghostery/adblocker/inject-cosmetic-filters', () => {
+        return { active: false, scripts: [], styles: '' }
+      })
+    } catch {}
+    try {
+      ipcMain.handle('@ghostery/adblocker/is-mutation-observer-enabled', () => {
+        return false
+      })
+    } catch {}
+  }
+
+  private removeCosmeticFilterHandler(): void {
+    try {
+      ipcMain.removeHandler('@ghostery/adblocker/inject-cosmetic-filters')
+    } catch {}
+    try {
+      ipcMain.removeHandler('@ghostery/adblocker/is-mutation-observer-enabled')
+    } catch {}
   }
 
   public getMode(): AdBlockMode {

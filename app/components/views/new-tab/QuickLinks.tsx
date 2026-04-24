@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Plus, X, Save, Globe } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
@@ -40,6 +40,27 @@ const defaultQuickLinks: QuickLink[] = [
   },
 ]
 
+function parseFaviconFromHtml(html: string, baseUrl: string): string | null {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+  const selectors = [
+    'link[rel="icon"]',
+    'link[rel="shortcut icon"]',
+    'link[rel="apple-touch-icon"]',
+    'link[rel="apple-touch-icon-precomposed"]',
+  ]
+  for (const sel of selectors) {
+    const el = doc.querySelector(sel)
+    const href = el?.getAttribute('href')
+    if (href) {
+      try {
+        return new URL(href, baseUrl).href
+      } catch {}
+    }
+  }
+  return null
+}
+
 interface QuickLinksProps {
   className?: string
   onLinkClick?: (url: string) => void
@@ -74,6 +95,37 @@ export function QuickLinks({ className = '', onLinkClick }: QuickLinksProps) {
       localStorage.setItem('quickLinks', JSON.stringify(quickLinks))
     }
   }, [quickLinks, mounted])
+
+  const discoverFavicon = useCallback(async (link: QuickLink) => {
+    try {
+      const res = await fetch(link.url)
+      if (!res.ok) return null
+      const html = await res.text()
+      return parseFaviconFromHtml(html, link.url)
+    } catch {
+      return null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!mounted || quickLinks.length === 0) return
+    let cancelled = false
+
+    const resolve = async () => {
+      const updates: Record<string, string> = {}
+      for (const link of quickLinks) {
+        if (link.favicon) continue
+        const found = await discoverFavicon(link)
+        if (cancelled) return
+        if (found) updates[link.id] = found
+      }
+      if (Object.keys(updates).length > 0) {
+        setQuickLinks(prev => prev.map(l => updates[l.id] ? { ...l, favicon: updates[l.id] } : l))
+      }
+    }
+    resolve()
+    return () => { cancelled = true }
+  }, [mounted, quickLinks.length, discoverFavicon])
 
   const handleAddLink = () => {
     if (newLinkName.trim() && newLinkUrl.trim()) {
@@ -112,6 +164,15 @@ export function QuickLinks({ className = '', onLinkClick }: QuickLinksProps) {
     try {
       const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
       return `${urlObj.origin}/favicon.ico`
+    } catch {
+      return undefined
+    }
+  }
+
+  const getGoogleFaviconUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
+      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`
     } catch {
       return undefined
     }
@@ -162,8 +223,14 @@ export function QuickLinks({ className = '', onLinkClick }: QuickLinksProps) {
                   src={getFaviconUrl(link.url, link.favicon)}
                   alt={link.name}
                   className="w-5 h-5 object-contain"
-                  onError={() => {
-                    setFailedFavicons((prev) => new Set(prev).add(link.id))
+                  onError={(e) => {
+                    const googleUrl = getGoogleFaviconUrl(link.url)
+                    const current = e.currentTarget.src
+                    if (googleUrl && !current.includes('google.com/s2/favicons')) {
+                      e.currentTarget.src = googleUrl
+                    } else {
+                      setFailedFavicons((prev) => new Set(prev).add(link.id))
+                    }
                   }}
                 />
               ) : (

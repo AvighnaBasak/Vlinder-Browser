@@ -100,7 +100,7 @@ export default function ApplicationInfoSettings() {
                     style={{
                       fontSize: '8px',
                       letterSpacing: '0.14em',
-                      color: '#2a2a2a',
+                      color: '#888888',
                       textTransform: 'uppercase',
                       marginBottom: '3px',
                     }}
@@ -110,7 +110,7 @@ export default function ApplicationInfoSettings() {
                   <div
                     style={{
                       fontSize: '10px',
-                      color: '#555',
+                      color: '#bbbbbb',
                       letterSpacing: '0.04em',
                       fontFamily: "'JetBrains Mono', monospace",
                     }}

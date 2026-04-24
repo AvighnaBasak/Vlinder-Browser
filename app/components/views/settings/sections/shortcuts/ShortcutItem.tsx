@@ -52,7 +52,7 @@ export function ShortcutItem({
             ) : shortcutInputValue ? (
               shortcutInputValue
             ) : (
-              <span style={{ color: '#2f2f2f', fontStyle: 'italic' }}>click to record</span>
+              <span style={{ color: '#777777', fontStyle: 'italic' }}>click to record</span>
             )}
           </div>
           <div className="s-kbd-actions">

@@ -328,11 +328,19 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
           }
         }
         img.onerror = () => {
-          // Fallback: just update favicon URL
-          onTabUpdate({
-            faviconUrl: faviconUrl,
-            logoUrl: faviconUrl, // Ensure logoUrl is set for display
-          } as any)
+          try {
+            const domain = new URL(faviconUrl).hostname
+            const googleFavicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+            onTabUpdate({
+              faviconUrl: googleFavicon,
+              logoUrl: googleFavicon,
+            } as any)
+          } catch {
+            onTabUpdate({
+              faviconUrl: faviconUrl,
+              logoUrl: faviconUrl,
+            } as any)
+          }
         }
         img.src = faviconUrl
       }
@@ -378,9 +386,30 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
         }
       }
 
+      let faviconReceived = false
+      const origHandleFavicon = handleFaviconUpdate
+      const wrappedHandleFavicon = (event: any) => {
+        faviconReceived = true
+        origHandleFavicon(event)
+      }
+
+      const handleDidFinishLoad = () => {
+        if (faviconReceived) return
+        try {
+          const url = webview.getURL()
+          if (!url || url === 'about:blank') return
+          const domain = new URL(url).hostname
+          const googleFavicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+          onTabUpdate({
+            faviconUrl: googleFavicon,
+            logoUrl: googleFavicon,
+          } as any)
+        } catch {}
+      }
+
       const handleNavigationStart = (event: any) => {
-        // Reset colors/favicon when navigation starts (min-master style)
         if (event.isMainFrame && onTabUpdate) {
+          faviconReceived = false
           onTabUpdate({
             backgroundColor: null,
             favicon: null,
@@ -389,14 +418,16 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
         }
       }
 
-      webview.addEventListener('page-favicon-updated', handleFaviconUpdate)
+      webview.addEventListener('page-favicon-updated', wrappedHandleFavicon)
       webview.addEventListener('did-change-theme-color', handleThemeColorChange)
       webview.addEventListener('did-start-navigation', handleNavigationStart)
+      webview.addEventListener('did-finish-load', handleDidFinishLoad)
 
       return () => {
-        webview.removeEventListener('page-favicon-updated', handleFaviconUpdate)
+        webview.removeEventListener('page-favicon-updated', wrappedHandleFavicon)
         webview.removeEventListener('did-change-theme-color', handleThemeColorChange)
         webview.removeEventListener('did-start-navigation', handleNavigationStart)
+        webview.removeEventListener('did-finish-load', handleDidFinishLoad)
       }
     }, [platform.id, onTabUpdate])
 

@@ -5,6 +5,9 @@ import { WindowTopBar } from './components/layout/WindowTopBar'
 import { WindowTopBarProvider } from './components/layout/WindowTopBarContext'
 import { AppWithTopBar } from './components/layout/AppWithTopBar'
 import App from './app'
+import { loadAndApplyTheme } from './utils/themes'
+
+loadAndApplyTheme()
 
 ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>

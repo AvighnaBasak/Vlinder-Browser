@@ -233,6 +233,30 @@ class StyleManager {
   }
 
   /**
+   * Check if a domain-specific (not fallback) style exists for this URL
+   */
+  public hasSiteSpecificStyle(url: string): boolean {
+    const host = this.extractHostFromURL(url)
+    if (!host) return false
+    const normalizedHost = this.normalizeHost(host)
+    for (const key of Object.keys(this.state.styleCache)) {
+      if (key.startsWith('+')) {
+        const domain = key.slice(1)
+        if (normalizedHost.endsWith(domain) || normalizedHost === domain) return true
+      } else if (key.startsWith('-')) {
+        const domain = key.slice(1)
+        const baseDomain = this.extractBaseDomain(domain)
+        const hostBaseDomain = this.extractBaseDomain(normalizedHost)
+        if (baseDomain && hostBaseDomain && baseDomain === hostBaseDomain &&
+            domain.split('.').length === normalizedHost.split('.').length) return true
+      } else if (key === normalizedHost || key === host) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
    * Check if styles are available (either domain-specific or fallback)
    */
   public get hasStyles(): boolean {

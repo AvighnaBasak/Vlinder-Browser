@@ -179,8 +179,8 @@ export function ShortcutsSettings() {
           outline: none;
           width: 100%;
         }
-        .s-kbd-search::placeholder { color: #2f2f2f; }
-        .s-kbd-search:focus { border-color: #2a2a2a; color: #aaa; }
+        .s-kbd-search::placeholder { color: #666666; }
+        .s-kbd-search:focus { border-color: #444444; color: #cccccc; }
         .s-kbd-search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); }
         .s-kbd-reset-btn {
           font-size: 10px;
@@ -190,7 +190,7 @@ export function ShortcutsSettings() {
           padding: 6px 12px;
           border: 1px solid #1f1f1f;
           background: transparent;
-          color: #3a3a3a;
+          color: #888888;
           border-radius: 2px;
           cursor: pointer;
           white-space: nowrap;
@@ -200,13 +200,13 @@ export function ShortcutsSettings() {
           gap: 6px;
           transition: all 0.12s ease;
         }
-        .s-kbd-reset-btn:hover { background: rgba(255,255,255,0.04); color: #666; border-color: #2f2f2f; }
+        .s-kbd-reset-btn:hover { background: rgba(255,255,255,0.04); color: #bbbbbb; border-color: #444444; }
         .s-kbd-reset-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         .s-kbd-cat-label {
           font-size: 9px;
           letter-spacing: 0.15em;
           text-transform: uppercase;
-          color: #333;
+          color: #888888;
           padding: 14px 20px 6px;
           font-weight: 600;
         }
@@ -222,10 +222,10 @@ export function ShortcutsSettings() {
         .s-kbd-item:last-child { border-bottom: none; }
         .s-kbd-item:hover { background: rgba(255,255,255,0.02); }
         .s-kbd-item.editing { background: rgba(255,255,255,0.03); }
-        .s-kbd-item.modified { border-left: 2px solid #3a3a3a; padding-left: 18px; }
+        .s-kbd-item.modified { border-left: 2px solid #666666; padding-left: 18px; }
         .s-kbd-name {
           font-size: 11px;
-          color: #888;
+          color: #cccccc;
           letter-spacing: 0.03em;
           flex: 1;
           min-width: 0;
@@ -233,11 +233,11 @@ export function ShortcutsSettings() {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .s-kbd-name.modified-label { color: #aaa; }
+        .s-kbd-name.modified-label { color: #e0e0e0; }
         .s-kbd-badge {
           font-size: 9px;
           letter-spacing: 0.07em;
-          color: #555;
+          color: #999999;
           background: rgba(255,255,255,0.05);
           border: 1px solid #1f1f1f;
           border-radius: 2px;
@@ -252,13 +252,13 @@ export function ShortcutsSettings() {
           background: #0c0c0c;
           border: 1px solid #1f1f1f;
           border-radius: 2px;
-          color: #666;
+          color: #aaaaaa;
           min-width: 100px;
           text-align: center;
           flex-shrink: 0;
         }
-        .s-kbd-key.modified { color: #aaa; border-color: #2a2a2a; background: #111; }
-        .s-kbd-key.unset { color: #333; font-style: italic; }
+        .s-kbd-key.modified { color: #e0e0e0; border-color: #444444; background: #111; }
+        .s-kbd-key.unset { color: #666666; font-style: italic; }
         .s-kbd-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
         .s-kbd-icon-btn {
           width: 26px;
@@ -270,10 +270,10 @@ export function ShortcutsSettings() {
           border-radius: 2px;
           background: transparent;
           cursor: pointer;
-          color: #333;
+          color: #777777;
           transition: all 0.1s ease;
         }
-        .s-kbd-icon-btn:hover { color: #888; border-color: #222; background: rgba(255,255,255,0.04); }
+        .s-kbd-icon-btn:hover { color: #cccccc; border-color: #444; background: rgba(255,255,255,0.04); }
         .s-kbd-icon-btn.save:hover { color: #6a8a6a; }
         .s-kbd-icon-btn.cancel:hover { color: #8a5a5a; }
         .s-kbd-icon-btn.reset-btn:hover { color: #5a6a8a; }
@@ -295,7 +295,7 @@ export function ShortcutsSettings() {
           justify-content: center;
           outline: none;
         }
-        .s-kbd-record-field:focus { border-color: #3a3a3a; }
+        .s-kbd-record-field:focus { border-color: #555555; }
         .s-kbd-record-field.recording { color: #888; border-color: #333; animation: recordPulse 1s ease infinite alternate; }
         @keyframes recordPulse { from { opacity: 0.6; } to { opacity: 1; } }
         .s-kbd-empty {
@@ -304,12 +304,12 @@ export function ShortcutsSettings() {
           align-items: center;
           justify-content: center;
           padding: 48px 20px;
-          color: #2f2f2f;
+          color: #777777;
           gap: 8px;
           text-align: center;
         }
-        .s-kbd-empty-title { font-size: 11px; color: #444; letter-spacing: 0.06em; }
-        .s-kbd-empty-desc { font-size: 10px; color: #2a2a2a; letter-spacing: 0.04em; }
+        .s-kbd-empty-title { font-size: 11px; color: #999999; letter-spacing: 0.06em; }
+        .s-kbd-empty-desc { font-size: 10px; color: #777777; letter-spacing: 0.04em; }
         .s-kbd-dialog-overlay {
           position: fixed;
           inset: 0;
@@ -391,7 +391,7 @@ export function ShortcutsSettings() {
         {/* Content */}
         {isLoading ? (
           <div className="s-kbd-empty">
-            <svg className="s-kbd-spin w-5 h-5" style={{ color: '#2f2f2f' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="s-kbd-spin w-5 h-5" style={{ color: '#777777' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="20" />
             </svg>
             <div className="s-kbd-empty-title">Loading shortcuts</div>
@@ -399,7 +399,7 @@ export function ShortcutsSettings() {
           </div>
         ) : Object.keys(groupedKeybinds).length === 0 && searchTerm ? (
           <div className="s-kbd-empty">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: '#2f2f2f' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: '#777777' }}>
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
             </svg>
             <div className="s-kbd-empty-title">No results for "{searchTerm}"</div>
@@ -407,7 +407,7 @@ export function ShortcutsSettings() {
           </div>
         ) : Object.keys(groupedKeybinds).length === 0 ? (
           <div className="s-kbd-empty">
-            <KeyboardIcon className="w-5 h-5" style={{ color: '#2f2f2f' }} />
+            <KeyboardIcon className="w-5 h-5" style={{ color: '#777777' }} />
             <div className="s-kbd-empty-title">No shortcuts configured</div>
           </div>
         ) : (

@@ -86,6 +86,49 @@ export class CSSInjectionService {
     }
   }
 
+  private readonly forceDarkCSS = `
+    /* Force dark mode: make all text white and backgrounds transparent/dark */
+    *, *::before, *::after {
+      color: #e8e8e8 !important;
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+    html, body {
+      background-color: transparent !important;
+      color-scheme: dark !important;
+    }
+    /* Force all container/element backgrounds dark or transparent */
+    div, section, article, aside, main, nav, header, footer,
+    table, thead, tbody, tfoot, tr, td, th,
+    ul, ol, li, dl, dt, dd, form, fieldset, legend,
+    details, summary, figure, figcaption, p, span, label,
+    h1, h2, h3, h4, h5, h6, blockquote, pre, code {
+      background-color: transparent !important;
+    }
+    /* Links */
+    a, a:visited { color: #8ab4f8 !important; }
+    a:hover { color: #aecbfa !important; }
+    /* Form elements get a subtle dark background so they remain usable */
+    input, textarea, select, button {
+      background-color: rgba(30,30,30,0.7) !important;
+      color: #e0e0e0 !important;
+    }
+    input::placeholder, textarea::placeholder {
+      color: #888888 !important;
+    }
+    /* Don't force color/bg on media elements — preserve their appearance */
+    img, video, canvas, picture, iframe,
+    img *, video *, canvas *, picture * {
+      color: initial !important;
+      background-color: initial !important;
+      border-color: initial !important;
+    }
+    /* Preserve SVG icon colors where they use fill/stroke, not text color */
+    svg { color: inherit !important; border-color: initial !important; }
+    /* Scrollbar in dark mode */
+    ::-webkit-scrollbar-track { background: transparent !important; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15) !important; }
+  `
+
   /**
    * Create the JavaScript injection script
    */
@@ -97,11 +140,10 @@ export class CSSInjectionService {
     }
 
     const css = styleManager.getStyle(url)
-    if (!css) {
-      return this.createRemovalScript()
-    }
-
-    const escapedCSS = this.escapeCSS(css)
+    // Always append forceDarkCSS so text is readable on the blended dark background
+    const baseCSS = css || ''
+    const finalCSS = baseCSS + '\n' + this.forceDarkCSS
+    const escapedCSS = this.escapeCSS(finalCSS)
 
     return `
       (function() {

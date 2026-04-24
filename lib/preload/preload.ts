@@ -29,6 +29,9 @@ if (process.contextIsolated) {
       onNavigateToDownloads: (callback: () => void) => {
         ipcRenderer.on('navigate-to-downloads', callback)
       },
+      onNavigateToHistory: (callback: () => void) => {
+        ipcRenderer.on('navigate-to-history', callback)
+      },
       onToggleSidebar: (callback: () => void) => {
         ipcRenderer.on('toggle-sidebar', callback)
       },
@@ -59,6 +62,7 @@ if (process.contextIsolated) {
       removeMenuActionListeners: () => {
         ipcRenderer.removeAllListeners('navigate-to-settings')
         ipcRenderer.removeAllListeners('navigate-to-downloads')
+        ipcRenderer.removeAllListeners('navigate-to-history')
         ipcRenderer.removeAllListeners('toggle-sidebar')
         ipcRenderer.removeAllListeners('toggle-command-palette')
         ipcRenderer.removeAllListeners('next-tab')
@@ -143,6 +147,9 @@ if (process.contextIsolated) {
     },
     onNavigateToDownloads: (callback: () => void) => {
       ipcRenderer.on('navigate-to-downloads', callback)
+    },
+    onNavigateToHistory: (callback: () => void) => {
+      ipcRenderer.on('navigate-to-history', callback)
     },
     onToggleSidebar: (callback: () => void) => {
       ipcRenderer.on('toggle-sidebar', callback)

@@ -12,6 +12,7 @@ declare global {
           useragent?: string
           partition?: string
           allowpopups?: string
+          allowfullscreen?: string
         },
         HTMLElement
       >
@@ -32,7 +33,7 @@ const WebviewSurface = forwardRef<HTMLElement, WebviewSurfaceProps>(({ platform,
       useragent={platform.userAgent}
       partition={getSessionPartition(platform)}
       className={className}
-      {...({ allowpopups: 'true' } as any)}
+      {...({ allowpopups: 'true', allowfullscreen: 'true' } as any)}
     />
   )
 })

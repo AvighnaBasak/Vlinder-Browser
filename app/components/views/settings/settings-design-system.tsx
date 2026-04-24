@@ -42,7 +42,7 @@ export const settingsStyles = `
 
   .s-panel-desc {
     font-size: 10px;
-    color: var(--theme-text-muted, #404040);
+    color: var(--theme-text-muted, #888888);
     letter-spacing: 0.04em;
     margin-top: 2px;
   }
@@ -86,20 +86,20 @@ export const settingsStyles = `
   .s-row-label {
     font-size: 11px;
     font-weight: 500;
-    color: #b0b0b0;
+    color: #e0e0e0;
     letter-spacing: 0.04em;
   }
 
   .s-row-desc {
     font-size: 10px;
-    color: #3d3d3d;
+    color: #888888;
     letter-spacing: 0.03em;
     margin-top: 2px;
     font-weight: 400;
   }
 
   .s-row-desc.active {
-    color: #666;
+    color: #aaaaaa;
   }
 
   .s-toggle {
@@ -168,7 +168,7 @@ export const settingsStyles = `
     border-radius: 2px;
     transition: all 0.15s ease;
     border: 1px solid transparent;
-    color: #3d3d3d;
+    color: #888888;
     background: transparent;
     white-space: nowrap;
     display: flex;
@@ -184,7 +184,7 @@ export const settingsStyles = `
 
   .s-seg-btn:hover:not(.active) {
     background: rgba(255,255,255,0.04);
-    color: #666;
+    color: #bbbbbb;
   }
 
   .s-radio-group {
@@ -245,23 +245,23 @@ export const settingsStyles = `
   .s-radio-label {
     font-size: 11px;
     font-weight: 500;
-    color: #888;
+    color: #cccccc;
     letter-spacing: 0.04em;
   }
 
   .s-radio-item.selected .s-radio-label {
-    color: #d0d0d0;
+    color: #f0f0f0;
   }
 
   .s-radio-subdesc {
     font-size: 10px;
-    color: #333;
+    color: #777777;
     letter-spacing: 0.03em;
     margin-top: 2px;
   }
 
   .s-radio-item.selected .s-radio-subdesc {
-    color: #555;
+    color: #999999;
   }
 
   .s-action-btn {
@@ -279,13 +279,13 @@ export const settingsStyles = `
     gap: 7px;
     border: 1px solid #252525;
     background: transparent;
-    color: #666;
+    color: #aaaaaa;
   }
 
   .s-action-btn:hover {
     background: rgba(255,255,255,0.05);
     border-color: #3a3a3a;
-    color: #aaa;
+    color: #e0e0e0;
   }
 
   .s-action-btn.s-btn-danger {
@@ -333,14 +333,14 @@ export const settingsStyles = `
     border-radius: 2px;
     padding: 10px 14px;
     font-size: 10px;
-    color: #3a3a3a;
+    color: #888888;
     letter-spacing: 0.04em;
     line-height: 1.7;
   }
 
   .s-info-box.warning {
     border-color: #2a1a0a;
-    color: #5a4a30;
+    color: #aa8855;
   }
 
   .s-status-ok {
@@ -372,7 +372,7 @@ export const settingsStyles = `
 
   .s-monospace-path {
     font-size: 10px;
-    color: #555;
+    color: #999999;
     letter-spacing: 0.04em;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -409,7 +409,7 @@ export const settingsStyles = `
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.06em;
-    color: #555;
+    color: #bbbbbb;
     margin-bottom: 6px;
     text-transform: uppercase;
   }
@@ -425,7 +425,7 @@ export const settingsStyles = `
 
   .s-grid-cell-list li {
     font-size: 10px;
-    color: #383838;
+    color: #888888;
     letter-spacing: 0.03em;
   }
 
@@ -433,7 +433,7 @@ export const settingsStyles = `
     font-size: 28px;
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: #2a2a2a;
+    color: #888888;
     font-family: 'JetBrains Mono', monospace;
     line-height: 1;
   }
@@ -460,7 +460,7 @@ export const settingsStyles = `
   .s-update-status {
     font-size: 10px;
     letter-spacing: 0.06em;
-    color: #3a3a3a;
+    color: #888888;
     padding: 6px 0;
     border-top: 1px solid var(--theme-border, #141414);
     margin-top: 8px;

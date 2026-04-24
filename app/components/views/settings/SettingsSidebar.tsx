@@ -88,13 +88,13 @@ export default function SettingsSidebar({ activeSection, onSectionChange }: Sett
           border-radius: 2px;
           background: rgba(255,255,255,0.06);
           border: 1px solid rgba(255,255,255,0.1);
-          color: #555;
+          color: #999999;
           line-height: 1.4;
         }
         .settings-tag.active {
           background: rgba(255,255,255,0.12);
           border-color: rgba(255,255,255,0.2);
-          color: #999;
+          color: #cccccc;
         }
         .settings-cursor {
           display: inline-block;
@@ -112,18 +112,18 @@ export default function SettingsSidebar({ activeSection, onSectionChange }: Sett
         .settings-section-label {
           font-size: 9px;
           letter-spacing: 0.15em;
-          color: #2f2f2f;
+          color: #777777;
           padding: 12px 12px 4px;
           text-transform: uppercase;
         }
         .settings-version {
           font-size: 9px;
-          color: #2a2a2a;
+          color: #777777;
           letter-spacing: 0.1em;
         }
         .settings-prompt {
           font-size: 10px;
-          color: #3a3a3a;
+          color: #888888;
         }
       `}</style>
 
@@ -143,8 +143,8 @@ export default function SettingsSidebar({ activeSection, onSectionChange }: Sett
             <span className="settings-cursor" />
           </div>
           <div className="settings-prompt mt-0.5">
-            <span style={{ color: '#444' }}>~/settings</span>{' '}
-            <span style={{ color: '#2a2a2a' }}>$_</span>
+            <span style={{ color: '#888' }}>~/settings</span>{' '}
+            <span style={{ color: '#666' }}>$_</span>
           </div>
         </div>
 

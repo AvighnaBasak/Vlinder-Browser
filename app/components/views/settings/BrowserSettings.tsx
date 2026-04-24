@@ -105,7 +105,7 @@ export default function BrowserSettings({ isActive }: BrowserSettingsProps) {
             <div>· Windows — Registers with system registry and Default Apps</div>
             <div>· macOS — Shows system dialog to confirm</div>
             <div>· Linux — Uses xdg-settings to assign handler</div>
-            <div style={{ marginTop: '6px', color: '#3a3a3a' }}>
+            <div style={{ marginTop: '6px', color: '#888888' }}>
               Note: Even if registration fails, basic protocol handling (http/https) should still work.
             </div>
           </div>

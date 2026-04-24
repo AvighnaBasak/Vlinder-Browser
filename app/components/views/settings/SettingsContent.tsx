@@ -154,18 +154,18 @@ export default function SettingsContent({
           background: var(--theme-surface, rgba(10,10,10,0.95));
         }
         .settings-breadcrumb-sep {
-          color: #2a2a2a;
+          color: #666666;
           font-size: 12px;
         }
         .settings-path-label {
           font-size: 10px;
           letter-spacing: 0.12em;
-          color: #3a3a3a;
+          color: #999999;
         }
         .settings-path-current {
           font-size: 10px;
           letter-spacing: 0.08em;
-          color: #888;
+          color: #cccccc;
         }
         .settings-indicator-dot {
           width: 5px;
@@ -200,7 +200,7 @@ export default function SettingsContent({
           padding: 2px 7px;
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.1);
-          color: #555;
+          color: #aaaaaa;
           border-radius: 2px;
         }
       `}</style>
