@@ -4,6 +4,7 @@ import { useWebviewCSS } from '@/app/hooks/useWebviewCSS'
 import { LoadingBar } from '@/app/components/ui/loading-bar'
 import { useConveyor } from '@/app/hooks/use-conveyor'
 import { useWebviewHistory } from '@/app/hooks/useHistory'
+import { getIncognitoPartition } from '@/app/utils/session-helpers'
 import WebviewSurface from '@/app/components/views/webview/WebviewSurface'
 import OfflineOverlay from '@/app/components/views/webview/OfflineOverlay'
 import WebviewContextMenuLayer from '@/app/components/views/webview/WebviewContextMenuLayer'
@@ -28,6 +29,7 @@ export interface WebviewContainerRef {
   navigate: (url: string) => void
   getCurrentUrl: () => string | null
   getCurrentTitle: () => string | null
+  capturePreview: () => Promise<string | null>
 }
 
 declare global {
@@ -82,7 +84,7 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
     })
 
     // History tracking
-    useWebviewHistory(webviewRef, platform.id, isActive)
+    useWebviewHistory(webviewRef, platform.id, isActive && !getIncognitoPartition())
 
     // Lazy loading: only load webview when it becomes active for the first time
     // Exception: tabs with URLs (not about:blank) should load immediately in background (like min-master)
@@ -993,50 +995,45 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
       }
     }, [hasAttemptedLoad])
 
-    // Handle drag-and-drop events for file uploads
+    // Handle drag-and-drop: show overlay during drag so webview doesn't swallow events
+    const [isDragging, setIsDragging] = useState(false)
+    const dragCountRef = useRef(0)
+
     useEffect(() => {
-      const webview = webviewRef.current
-      if (!webview || !isActive) return
+      if (!isActive) return
 
-      const handleDragOver = (event: DragEvent) => {
-        event.preventDefault()
-        event.stopPropagation()
-      }
+      const hasDroppableData = (dt: DataTransfer | null) =>
+        dt?.types?.includes('Files') ||
+        dt?.types?.includes('text/uri-list') ||
+        dt?.types?.includes('text/plain')
 
-      const handleDragEnter = (event: DragEvent) => {
-        event.preventDefault()
-        event.stopPropagation()
-      }
-
-      const handleDragLeave = (event: DragEvent) => {
-        event.preventDefault()
-        event.stopPropagation()
-      }
-
-      const handleDrop = (event: DragEvent) => {
-        event.preventDefault()
-        event.stopPropagation()
-
-        // Let the webview handle the file drop naturally
-        // We just prevent the default behavior that might trigger navigation
-      }
-
-      // Add drag-and-drop event listeners to the webview container
-      const container = webview.parentElement
-      if (container) {
-        container.addEventListener('dragover', handleDragOver)
-        container.addEventListener('dragenter', handleDragEnter)
-        container.addEventListener('dragleave', handleDragLeave)
-        container.addEventListener('drop', handleDrop)
-
-        return () => {
-          container.removeEventListener('dragover', handleDragOver)
-          container.removeEventListener('dragenter', handleDragEnter)
-          container.removeEventListener('dragleave', handleDragLeave)
-          container.removeEventListener('drop', handleDrop)
+      const handleDragEnter = (e: DragEvent) => {
+        if (hasDroppableData(e.dataTransfer)) {
+          dragCountRef.current++
+          setIsDragging(true)
         }
       }
-    }, [platform.name, isActive])
+      const handleDragLeave = () => {
+        dragCountRef.current--
+        if (dragCountRef.current <= 0) {
+          dragCountRef.current = 0
+          setIsDragging(false)
+        }
+      }
+      const handleDrop = () => {
+        dragCountRef.current = 0
+        setIsDragging(false)
+      }
+
+      document.addEventListener('dragenter', handleDragEnter)
+      document.addEventListener('dragleave', handleDragLeave)
+      document.addEventListener('drop', handleDrop)
+      return () => {
+        document.removeEventListener('dragenter', handleDragEnter)
+        document.removeEventListener('dragleave', handleDragLeave)
+        document.removeEventListener('drop', handleDrop)
+      }
+    }, [isActive])
 
     const handleReload = () => {
       const webview = webviewRef.current as any
@@ -1112,6 +1109,18 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
             }
           }
           return null
+        },
+        capturePreview: async () => {
+          const webview = webviewRef.current as any
+          if (!webview || !webview.capturePage) return null
+          try {
+            const image = await webview.capturePage()
+            if (image.isEmpty()) return null
+            const resized = image.resize({ width: 320 })
+            return resized.toDataURL()
+          } catch {
+            return null
+          }
         },
       }),
       []
@@ -1292,6 +1301,53 @@ const WebviewContainer = forwardRef<WebviewContainerRef, WebviewContainerProps>(
               }
             }}
           />
+        )}
+
+        {/* Drag-and-drop overlay - covers the webview so drop events reach the renderer */}
+        {isDragging && isActive && (
+          <div
+            className="absolute inset-0 z-50 flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.35)' }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+            }}
+            onDrop={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              dragCountRef.current = 0
+              setIsDragging(false)
+
+              let url: string | null = null
+              const uriList = e.dataTransfer?.getData('text/uri-list')
+              const textData = e.dataTransfer?.getData('text/plain')
+
+              if (uriList) {
+                url = uriList.split('\n').find((l) => l.startsWith('http://') || l.startsWith('https://')) || null
+              } else if (textData && (textData.startsWith('http://') || textData.startsWith('https://'))) {
+                url = textData
+              }
+
+              if (!url && e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0]
+                url = `file://${(file as any).path?.replace(/\\/g, '/') || ''}`
+              }
+
+              if (url) {
+                window.dispatchEvent(new CustomEvent('app-drop-url', { detail: { url } }))
+              }
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault()
+              dragCountRef.current = 0
+              setIsDragging(false)
+            }}
+          >
+            <div className="rounded-xl border-2 border-dashed border-white/50 px-8 py-6 text-white text-sm font-medium">
+              Drop here to open
+            </div>
+          </div>
         )}
 
         {/* Context Menu */}

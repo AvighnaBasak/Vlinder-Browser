@@ -2,7 +2,21 @@
   "name": "vlinder",
   "productName": "Vlinder",
   "version": "0.1.5",
-  "description": "Unified feed for all your social media platforms in one window",
+  "description": "Vlinder - The best open-source Electron browser. Privacy-focused desktop web browser with built-in ad blocker, Tor proxy, incognito mode, password manager, tab groups, split screen, and customizable themes. A lightweight, low-memory alternative to Chrome built with Electron, React, and TypeScript.",
+  "keywords": [
+    "electron", "electron-browser", "electron-based-browser", "electron-web-browser", "electron-desktop-browser",
+    "browser", "web-browser", "desktop-browser", "open-source-browser", "privacy-browser",
+    "ad-blocker", "adblocker", "content-blocker", "youtube-ad-blocker",
+    "tor", "tor-proxy", "tor-browser", "vpn", "anonymity",
+    "incognito", "private-browsing", "privacy",
+    "password-manager", "download-manager",
+    "tab-groups", "split-screen", "tabs",
+    "react", "typescript", "tailwindcss", "vite",
+    "chromium", "chrome-alternative", "brave-alternative", "firefox-alternative",
+    "lightweight-browser", "low-memory-browser", "minimal-browser",
+    "windows", "macos", "linux", "cross-platform",
+    "themes", "customizable", "transparency", "acrylic"
+  ],
   "main": "./out/main/main.js",
   "license": "GPL-3.0-only",
   "author": {

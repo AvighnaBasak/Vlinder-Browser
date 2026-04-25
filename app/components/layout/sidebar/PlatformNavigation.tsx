@@ -1,23 +1,27 @@
-import { useMemo, useState, useEffect, useCallback, memo } from 'react'
-import { type Tab as Platform } from '@/app/types/tab'
+import { useMemo, useState, useEffect, useCallback, memo, useRef } from 'react'
+import ReactDOM from 'react-dom'
+import { type Tab as Platform, type TabGroup as TabGroupType, GROUP_COLORS } from '@/app/types/tab'
+import type { WebviewContainerRef } from '@/app/components/views/WebviewContainer'
 import {
   Pin,
   Volume2,
   VolumeX,
   RotateCw,
   ExternalLink,
-  Trash2,
-  Bell,
-  BellOff,
   X,
   Plus,
   Globe,
-  GripVertical,
-  Copy,
   Link2,
   CopyPlus,
   XCircle,
   ChevronRight,
+  ChevronDown,
+  AppWindow,
+  SplitSquareHorizontal,
+  Pencil,
+  Palette,
+  Unlink,
+  Layers,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -32,6 +36,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -52,6 +58,83 @@ interface NavItem {
 }
 
 export const PlatformNavigation = memo(PlatformNavigationComponent)
+
+const SortableItem = memo(
+  ({
+    item,
+    isTemporaryApp,
+    isCustomPlatform,
+    renderItem,
+  }: {
+    item: NavItem
+    isTemporaryApp: boolean
+    isCustomPlatform: boolean
+    renderItem: (
+      item: NavItem,
+      isTemporaryApp: boolean,
+      isCustomPlatform: boolean,
+    ) => React.ReactNode
+  }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    }
+
+    return (
+      <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-50 z-50')} {...attributes} {...listeners}>
+        {renderItem(item, isTemporaryApp, isCustomPlatform)}
+      </div>
+    )
+  }
+)
+SortableItem.displayName = 'SortableItem'
+
+const DraggableTabItem = memo(
+  ({
+    item,
+    renderItem,
+    isGroupTarget,
+    dropPosition,
+  }: {
+    item: NavItem
+    renderItem: (item: NavItem, isTemporaryApp: boolean, isCustomPlatform: boolean) => React.ReactNode
+    isGroupTarget: boolean
+    dropPosition: 'above' | 'below' | null
+  }) => {
+    const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id: item.id })
+
+    return (
+      <div
+        ref={setNodeRef}
+        className={cn(
+          'relative',
+          isDragging && 'opacity-30 scale-95 transition-all duration-150',
+          isGroupTarget && 'scale-[1.02] transition-transform duration-200',
+        )}
+        {...attributes}
+        {...listeners}
+      >
+        {dropPosition === 'above' && !isGroupTarget && (
+          <div className="absolute -top-[1px] left-2 right-2 h-[2px] bg-blue-500 rounded-full z-10 animate-in fade-in-0 duration-150" />
+        )}
+        <div
+          className={cn(
+            'rounded-md transition-all duration-200',
+            isGroupTarget && 'ring-2 ring-blue-500/60 bg-blue-500/10',
+          )}
+        >
+          {renderItem(item, true, false)}
+        </div>
+        {dropPosition === 'below' && !isGroupTarget && (
+          <div className="absolute -bottom-[1px] left-2 right-2 h-[2px] bg-blue-500 rounded-full z-10 animate-in fade-in-0 duration-150" />
+        )}
+      </div>
+    )
+  }
+)
+DraggableTabItem.displayName = 'DraggableTabItem'
 
 interface PlatformNavigationProps {
   activePlatform: string
@@ -87,6 +170,20 @@ interface PlatformNavigationProps {
   onCopyTabLink?: (id: string) => Promise<void> | void
   onCloseOtherTabs?: (id: string) => void
   onCloseTabsToRight?: (id: string) => void
+  webviewRefs?: React.MutableRefObject<Record<string, WebviewContainerRef>>
+  // split screen
+  splitTabId: string | null
+  onOpenSplitScreen: (tabId: string) => void
+  // tab groups
+  tabGroups: TabGroupType[]
+  onCreateTabGroup: (tabIds: string[], name?: string) => void
+  onRenameTabGroup: (groupId: string, name: string) => void
+  onSetGroupColor: (groupId: string, color: string) => void
+  onToggleGroupCollapsed: (groupId: string) => void
+  onAddToGroup: (groupId: string, tabId: string) => void
+  onRemoveFromGroup: (tabId: string) => void
+  onUnlinkGroup: (groupId: string) => void
+  onCloseGroup: (groupId: string) => void
 }
 
 function PlatformNavigationComponent({
@@ -123,17 +220,124 @@ function PlatformNavigationComponent({
   onCopyTabLink,
   onCloseOtherTabs,
   onCloseTabsToRight,
+  webviewRefs,
+  splitTabId,
+  onOpenSplitScreen,
+  tabGroups,
+  onCreateTabGroup,
+  onRenameTabGroup,
+  onSetGroupColor,
+  onToggleGroupCollapsed,
+  onAddToGroup,
+  onRemoveFromGroup,
+  onUnlinkGroup,
+  onCloseGroup,
 }: PlatformNavigationProps) {
   // State to track loaded favicons for custom platforms
   const [loadedFavicons, setLoadedFavicons] = useState<Record<string, string>>({})
   const [loadingFavicons, setLoadingFavicons] = useState<Record<string, boolean>>({})
 
-  // Drag and drop sensors
+  // Tab preview state — rendered as a standalone floating div, not inside Radix tooltip
+  const [previewData, setPreviewData] = useState<{
+    tabId: string
+    image: string | null
+    title: string
+    url: string
+    top: number
+  } | null>(null)
+  const previewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previewTabIdRef = useRef<string | null>(null)
+  const contextMenuOpenRef = useRef(false)
+  const tabsRef = useRef(tabs)
+  tabsRef.current = tabs
+  const dynamicTitlesRef = useRef(dynamicTitles)
+  dynamicTitlesRef.current = dynamicTitles
+
+  const handleTabHoverStart = useCallback(
+    (tabId: string, e: React.MouseEvent) => {
+      if (tabId === activePlatform) return
+      // Don't show preview while a context menu is open
+      if (contextMenuOpenRef.current) return
+      // Already showing preview for this tab — don't restart
+      if (previewTabIdRef.current === tabId) return
+
+      previewTabIdRef.current = tabId
+      if (previewTimeoutRef.current) clearTimeout(previewTimeoutRef.current)
+
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const top = rect.top
+
+      previewTimeoutRef.current = setTimeout(async () => {
+        if (previewTabIdRef.current !== tabId) return
+        const tabData = tabsRef.current.find((t) => t.id === tabId)
+        if (!tabData) return
+
+        const title = (tabData as any).title || dynamicTitlesRef.current[tabId] || tabData.name || 'Untitled'
+        let url = ''
+        try {
+          url = tabData.url ? new URL(tabData.url).hostname : ''
+        } catch {
+          url = tabData.url || ''
+        }
+
+        setPreviewData({ tabId, image: null, title, url, top })
+
+        const ref = webviewRefs?.current?.[tabId]
+        if (ref?.capturePreview) {
+          const img = await ref.capturePreview()
+          if (previewTabIdRef.current === tabId) {
+            setPreviewData((prev) => (prev?.tabId === tabId ? { ...prev, image: img } : prev))
+          }
+        }
+      }, 400)
+    },
+    [activePlatform, webviewRefs]
+  )
+
+  const handleTabHoverEnd = useCallback(() => {
+    previewTabIdRef.current = null
+    if (previewTimeoutRef.current) {
+      clearTimeout(previewTimeoutRef.current)
+      previewTimeoutRef.current = null
+    }
+    setPreviewData(null)
+  }, [])
+
+  const handleContextMenuOpenChange = useCallback((open: boolean) => {
+    contextMenuOpenRef.current = open
+    if (open) {
+      // Dismiss preview immediately when context menu opens
+      previewTabIdRef.current = null
+      if (previewTimeoutRef.current) {
+        clearTimeout(previewTimeoutRef.current)
+        previewTimeoutRef.current = null
+      }
+      setPreviewData(null)
+    }
+  }, [])
+
+  // Tab group drag state
+  const [dragActiveId, setDragActiveId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [groupingTargetId, setGroupingTargetId] = useState<string | null>(null)
+  const [dropPosition, setDropPosition] = useState<Record<string, 'above' | 'below'>>({})
+  const groupingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastOverIdRef = useRef<string | null>(null)
+
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [editingGroupName, setEditingGroupName] = useState('')
+  const groupNameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (editingGroupId && groupNameInputRef.current) {
+      groupNameInputRef.current.focus()
+      groupNameInputRef.current.select()
+    }
+  }, [editingGroupId])
+
+  // Drag and drop sensors — require 8px movement before drag starts
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
 
   // Function to load favicon for custom platform when it becomes active
@@ -231,15 +435,130 @@ function PlatformNavigationComponent({
     })
   }, [tabs, dynamicTitles, pinnedPlatforms])
 
+  const clearGroupingTimer = useCallback(() => {
+    if (groupingTimerRef.current) {
+      clearTimeout(groupingTimerRef.current)
+      groupingTimerRef.current = null
+    }
+  }, [])
+
+  // Handle drag start
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setDragActiveId(String(event.active.id))
+    setGroupingTargetId(null)
+    setDropPosition({})
+  }, [])
+
+  // Handle drag over — detect hover for grouping (0.8s) vs reordering
+  const handleDragOver = useCallback(
+    (event: any) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) {
+        clearGroupingTimer()
+        setDragOverId(null)
+        setGroupingTargetId(null)
+        setDropPosition({})
+        lastOverIdRef.current = null
+        return
+      }
+
+      const overId = String(over.id)
+      const activeId = String(active.id)
+      setDragOverId(overId)
+
+      // Determine drop position (above/below) based on cursor relative to target center
+      if (over.rect) {
+        const overRect = over.rect
+        const cursorY = (event as any).activatorEvent?.clientY ?? 0
+        const delta = (event as any).delta?.y ?? 0
+        const currentY = cursorY + delta
+        const midY = overRect.top + overRect.height / 2
+        setDropPosition({ [overId]: currentY < midY ? 'above' : 'below' })
+      }
+
+      // If we moved to a different target, restart grouping timer
+      if (overId !== lastOverIdRef.current) {
+        lastOverIdRef.current = overId
+        clearGroupingTimer()
+        setGroupingTargetId(null)
+
+        // Only start grouping timer for ungrouped tabs
+        const isOverInGroup = tabGroups.some((g) => g.tabIds.includes(overId))
+        if (!isOverInGroup) {
+          groupingTimerRef.current = setTimeout(() => {
+            setGroupingTargetId(overId)
+            setDropPosition({})
+          }, 800)
+        }
+      }
+    },
+    [clearGroupingTimer, tabGroups]
+  )
+
   // Handle drag end
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event
+      clearGroupingTimer()
 
+      const currentGroupingTarget = groupingTargetId
+
+      setDragActiveId(null)
+      setDragOverId(null)
+      setGroupingTargetId(null)
+      setDropPosition({})
+      lastOverIdRef.current = null
+
+      if (!over || active.id === over.id) return
+
+      const activeId = String(active.id)
+      const overId = String(over.id)
+
+      // If grouping mode is active (held hover 0.8s), create/add to group
+      if (currentGroupingTarget === overId) {
+        const targetGroup = tabGroups.find((g) => g.tabIds.includes(overId))
+        if (targetGroup) {
+          onAddToGroup(targetGroup.id, activeId)
+        } else {
+          onCreateTabGroup([overId, activeId])
+        }
+        return
+      }
+
+      // Check if dropping onto a group's tab — add to that group
+      const targetGroup = tabGroups.find((g) => g.tabIds.includes(overId))
+      if (targetGroup) {
+        const sourceGroup = tabGroups.find((g) => g.tabIds.includes(activeId))
+        if (!sourceGroup || sourceGroup.id !== targetGroup.id) {
+          onAddToGroup(targetGroup.id, activeId)
+          return
+        }
+      }
+
+      // Normal reorder
+      const unpinned = allPlatformItems.filter((item) => !pinnedPlatforms?.[item.id])
+      const oldIndex = unpinned.findIndex((item) => item.id === activeId)
+      const newIndex = unpinned.findIndex((item) => item.id === overId)
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = arrayMove(
+          allPlatformItems.map((i) => i.id),
+          allPlatformItems.findIndex((i) => i.id === activeId),
+          allPlatformItems.findIndex((i) => i.id === overId)
+        )
+        onReorderPlatforms(newOrder)
+      }
+    },
+    [allPlatformItems, onReorderPlatforms, tabGroups, onAddToGroup, onCreateTabGroup, clearGroupingTimer, groupingTargetId, pinnedPlatforms]
+  )
+
+  // Simple reorder handler for pinned tabs (no group logic)
+  const handlePinnedDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
       if (over && active.id !== over.id) {
         const oldIndex = allPlatformItems.findIndex((item) => item.id === active.id)
         const newIndex = allPlatformItems.findIndex((item) => item.id === over.id)
-
         if (oldIndex !== -1 && newIndex !== -1) {
           const newOrder = arrayMove(allPlatformItems, oldIndex, newIndex).map((item) => item.id)
           onReorderPlatforms(newOrder)
@@ -249,37 +568,19 @@ function PlatformNavigationComponent({
     [allPlatformItems, onReorderPlatforms]
   )
 
+  const handleDragCancel = useCallback(() => {
+    clearGroupingTimer()
+    setDragActiveId(null)
+    setDragOverId(null)
+    setGroupingTargetId(null)
+    setDropPosition({})
+    lastOverIdRef.current = null
+  }, [clearGroupingTimer])
+
   // Tabs list doubles as previous temporary items
   const temporaryItems: NavItem[] = useMemo(() => {
     return allPlatformItems
   }, [allPlatformItems])
-
-  // Sortable item component - memoized for performance
-  const SortableItem = memo(
-    ({
-      item,
-      isTemporaryApp,
-      isCustomPlatform,
-    }: {
-      item: NavItem
-      isTemporaryApp: boolean
-      isCustomPlatform: boolean
-    }) => {
-      const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
-
-      const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-      }
-
-      return (
-        <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-50 z-50')}>
-          {renderAppItem(item, isTemporaryApp, isCustomPlatform, attributes, listeners)}
-        </div>
-      )
-    }
-  )
-  SortableItem.displayName = 'SortableItem'
 
   // Render individual app item - memoized for performance
   const renderAppItem = useCallback(
@@ -287,8 +588,6 @@ function PlatformNavigationComponent({
       item: NavItem,
       isTemporaryApp: boolean,
       isCustomPlatform: boolean = false,
-      dragAttributes?: any,
-      dragListeners?: any
     ) => {
       const Icon = item.icon || Globe // Fallback to Globe icon if icon is undefined
       const isActive = activePlatform === item.id
@@ -329,6 +628,8 @@ function PlatformNavigationComponent({
           key={item.id}
           onClick={() => onSelectTab(item.id)}
           onMouseDown={handleMiddleClick}
+          onMouseEnter={(e) => handleTabHoverStart(item.id, e)}
+          onMouseLeave={handleTabHoverEnd}
           className={cn(
             'flex items-center rounded-md group relative w-full text-left',
             compact ? 'justify-center py-0.5' : 'px-1 py-0.5 gap-2.5',
@@ -338,7 +639,7 @@ function PlatformNavigationComponent({
                 ? 'hover:bg-white/6 text-gray-400'
                 : isActive ? 'text-gray-100' : 'text-gray-400'
           )}
-          title={item.name}
+          title={isActive ? item.name : undefined}
         >
           <div className="relative w-7 h-7 rounded-md flex-none">
             <div
@@ -373,6 +674,7 @@ function PlatformNavigationComponent({
                   alt={item.name}
                   className="w-4 h-4 rounded object-cover"
                   loading="lazy"
+                  draggable={false}
                   onError={(e) => {
                     e.currentTarget.style.display = 'none'
                     const iconElement = e.currentTarget.nextElementSibling as HTMLElement
@@ -417,17 +719,6 @@ function PlatformNavigationComponent({
               compact ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100'
             )}
           >
-            {/* Drag handle - only show in expanded mode and for non-temporary apps */}
-            {!compact && !isTemporaryApp && dragListeners && (
-              <div
-                {...dragAttributes}
-                {...dragListeners}
-                className="opacity-0 group-hover:opacity-60 hover:opacity-100 cursor-grab active:cursor-grabbing rounded pl-0.5"
-                title="Drag to reorder"
-              >
-                <GripVertical className="w-3 h-3 text-gray-400" />
-              </div>
-            )}
             <TooltipProvider>
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
@@ -525,6 +816,29 @@ function PlatformNavigationComponent({
             <ContextMenuItem icon={Link2} label="Copy Link" onClick={() => onCopyTabLink(item.id)} />
           )}
 
+          {/* Open in New Window */}
+          {tabData && tabData.url && tabData.url !== 'about:blank' && (
+            <ContextMenuItem
+              icon={AppWindow}
+              label="Open in New Window"
+              onClick={() => {
+                const api = (window as any).electronAPI
+                if (api?.openNewWindow) {
+                  api.openNewWindow(tabData.url)
+                }
+              }}
+            />
+          )}
+
+          {/* Open in Split Screen - only for non-active tabs with URLs */}
+          {tabData && tabData.url && tabData.url !== 'about:blank' && activePlatform !== item.id && (
+            <ContextMenuItem
+              icon={SplitSquareHorizontal}
+              label="Open in Split Screen"
+              onClick={() => onOpenSplitScreen(item.id)}
+            />
+          )}
+
           <ContextMenuSeparator />
 
           {/* Reload */}
@@ -568,7 +882,7 @@ function PlatformNavigationComponent({
           <Tooltip delayDuration={200}>
             <TooltipTrigger asChild>
               <div className="relative">
-                <ContextMenu trigger={button}>{menuContent}</ContextMenu>
+                <ContextMenu trigger={button} onOpenChange={handleContextMenuOpenChange}>{menuContent}</ContextMenu>
               </div>
             </TooltipTrigger>
             <TooltipContent side="right" className="backdrop-blur-light">
@@ -584,7 +898,7 @@ function PlatformNavigationComponent({
         </TooltipProvider>
       ) : (
         <div key={item.id} className="relative">
-          <ContextMenu trigger={button}>{menuContent}</ContextMenu>
+          <ContextMenu trigger={button} onOpenChange={handleContextMenuOpenChange}>{menuContent}</ContextMenu>
         </div>
       )
     },
@@ -612,10 +926,16 @@ function PlatformNavigationComponent({
       pinnedPlatforms,
       tabs,
       useOriginalLogos,
+      handleTabHoverStart,
+      handleTabHoverEnd,
+      handleContextMenuOpenChange,
+      onOpenSplitScreen,
+      splitTabId,
     ]
   )
 
   return (
+    <>
     <nav className={cn('flex-1 pb-4 space-y-1 no-drag overflow-y-auto scrollbar-none', compact ? 'px-1' : 'px-1')}>
       {/* Pinned Tabs Section - Always at top (like QuickLinks) */}
       {allPlatformItems.filter((item) => pinnedPlatforms?.[item.id]).length > 0 && (
@@ -683,6 +1003,20 @@ function PlatformNavigationComponent({
                             <ContextMenuItem icon={Link2} label="Copy Link" onClick={() => onCopyTabLink(item.id)} />
                           )}
 
+                          {/* Open in New Window */}
+                          {tabData && tabData.url && tabData.url !== 'about:blank' && (
+                            <ContextMenuItem
+                              icon={AppWindow}
+                              label="Open in New Window"
+                              onClick={() => {
+                                const api = (window as any).electronAPI
+                                if (api?.openNewWindow) {
+                                  api.openNewWindow(tabData.url)
+                                }
+                              }}
+                            />
+                          )}
+
                           <ContextMenuSeparator />
 
                           {/* Reload */}
@@ -719,6 +1053,7 @@ function PlatformNavigationComponent({
                                 src={tabFavicon}
                                 alt={item.name}
                                 className="w-[14px] h-[14px] object-contain"
+                                draggable={false}
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
                                   const iconElement = e.currentTarget.nextElementSibling as HTMLElement
@@ -738,7 +1073,7 @@ function PlatformNavigationComponent({
 
                       return (
                         <div key={item.id} className="relative m-0">
-                          <ContextMenu trigger={button}>{menuContent}</ContextMenu>
+                          <ContextMenu trigger={button} onOpenChange={handleContextMenuOpenChange}>{menuContent}</ContextMenu>
                         </div>
                       )
                     })}
@@ -809,6 +1144,20 @@ function PlatformNavigationComponent({
                           <ContextMenuItem icon={Link2} label="Copy Link" onClick={() => onCopyTabLink(item.id)} />
                         )}
 
+                        {/* Open in New Window */}
+                        {tabData && tabData.url && tabData.url !== 'about:blank' && (
+                          <ContextMenuItem
+                            icon={AppWindow}
+                            label="Open in New Window"
+                            onClick={() => {
+                              const api = (window as any).electronAPI
+                              if (api?.openNewWindow) {
+                                api.openNewWindow(tabData.url)
+                              }
+                            }}
+                          />
+                        )}
+
                         <ContextMenuSeparator />
 
                         {/* Reload */}
@@ -845,6 +1194,7 @@ function PlatformNavigationComponent({
                               src={tabFavicon}
                               alt={item.name}
                               className="w-[18px] h-[18px] object-contain"
+                              draggable={false}
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none'
                                 const iconElement = e.currentTarget.nextElementSibling as HTMLElement
@@ -864,7 +1214,7 @@ function PlatformNavigationComponent({
 
                     return (
                       <div key={item.id} className="relative m-0">
-                        <ContextMenu trigger={button}>{menuContent}</ContextMenu>
+                        <ContextMenu trigger={button} onOpenChange={handleContextMenuOpenChange}>{menuContent}</ContextMenu>
                       </div>
                     )
                   })}
@@ -873,7 +1223,7 @@ function PlatformNavigationComponent({
             })()
           ) : (
             // List layout (default)
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePinnedDragEnd}>
               <SortableContext
                 items={allPlatformItems.filter((item) => pinnedPlatforms?.[item.id]).map((item) => item.id)}
                 strategy={verticalListSortingStrategy}
@@ -881,7 +1231,7 @@ function PlatformNavigationComponent({
                 {allPlatformItems
                   .filter((item) => pinnedPlatforms?.[item.id])
                   .map((item) => {
-                    return <SortableItem key={item.id} item={item} isTemporaryApp={true} isCustomPlatform={false} />
+                    return <SortableItem key={item.id} item={item} isTemporaryApp={true} isCustomPlatform={false} renderItem={renderAppItem} />
                   })}
               </SortableContext>
             </DndContext>
@@ -917,23 +1267,243 @@ function PlatformNavigationComponent({
           </div>
         )}
 
-      {/* Regular Tabs Section */}
+      {/* Regular Tabs Section — with tab groups */}
       {allPlatformItems.filter((item) => !pinnedPlatforms?.[item.id]).length > 0 && (
-        <div className={cn('space-y-1', compact ? 'px-1' : 'px-1')}>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <div className={cn('space-y-0.5', compact ? 'px-1' : 'px-1')}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
             <SortableContext
               items={allPlatformItems.filter((item) => !pinnedPlatforms?.[item.id]).map((item) => item.id)}
               strategy={verticalListSortingStrategy}
             >
-              {allPlatformItems
-                .filter((item) => !pinnedPlatforms?.[item.id])
-                .map((item) => {
-                  return <SortableItem key={item.id} item={item} isTemporaryApp={true} isCustomPlatform={false} />
-                })}
+            {(() => {
+              const unpinnedItems = allPlatformItems.filter((item) => !pinnedPlatforms?.[item.id])
+              const groupedTabIds = new Set(tabGroups.flatMap((g) => g.tabIds))
+              const renderedTabIds = new Set<string>()
+              const elements: React.ReactNode[] = []
+
+              for (const item of unpinnedItems) {
+                if (renderedTabIds.has(item.id)) continue
+
+                const group = tabGroups.find((g) => g.tabIds.includes(item.id))
+                if (group && !renderedTabIds.has(group.tabIds[0])) {
+                  const groupItems = group.tabIds
+                    .map((tid) => unpinnedItems.find((i) => i.id === tid))
+                    .filter(Boolean) as NavItem[]
+
+                  elements.push(
+                    <div key={`group-${group.id}`} className="mb-0.5 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+                      {/* Group Header */}
+                      <ContextMenu
+                        trigger={
+                          compact ? (
+                            <button
+                              onClick={() => onToggleGroupCollapsed(group.id)}
+                              className={cn(
+                                'flex items-center justify-center w-full rounded-md py-1',
+                                'hover:bg-white/6 transition-colors duration-150'
+                              )}
+                              title={`${group.name} (${groupItems.length})`}
+                            >
+                              <Layers className="w-3.5 h-3.5" style={{ color: group.color }} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => onToggleGroupCollapsed(group.id)}
+                              className={cn(
+                                'flex items-center gap-1.5 w-full rounded-md px-1.5 py-1 text-left group/header',
+                                'hover:bg-white/6 transition-all duration-150'
+                              )}
+                            >
+                              <Layers
+                                className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200"
+                                style={{ color: group.color }}
+                              />
+                              {editingGroupId === group.id ? (
+                                <input
+                                  ref={groupNameInputRef}
+                                  value={editingGroupName}
+                                  onChange={(e) => setEditingGroupName(e.target.value)}
+                                  onBlur={() => {
+                                    if (editingGroupName.trim()) {
+                                      onRenameTabGroup(group.id, editingGroupName.trim())
+                                    }
+                                    setEditingGroupId(null)
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      if (editingGroupName.trim()) {
+                                        onRenameTabGroup(group.id, editingGroupName.trim())
+                                      }
+                                      setEditingGroupId(null)
+                                    } else if (e.key === 'Escape') {
+                                      setEditingGroupId(null)
+                                    }
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-[11px] font-semibold bg-transparent border-b border-white/30 outline-none flex-1 min-w-0"
+                                  style={{ color: group.color }}
+                                />
+                              ) : (
+                                <span
+                                  className="text-[11px] font-semibold truncate flex-1"
+                                  style={{ color: group.color }}
+                                >
+                                  {group.name}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-gray-500 flex-shrink-0">
+                                {groupItems.length}
+                              </span>
+                              <ChevronDown
+                                className={cn(
+                                  'w-3 h-3 text-gray-500 transition-transform duration-200 flex-shrink-0',
+                                  group.collapsed && '-rotate-90'
+                                )}
+                              />
+                            </button>
+                          )
+                        }
+                        onOpenChange={handleContextMenuOpenChange}
+                      >
+                        <ContextMenuItem
+                          icon={Pencil}
+                          label="Rename Group"
+                          onClick={() => {
+                            setEditingGroupId(group.id)
+                            setEditingGroupName(group.name)
+                          }}
+                        />
+                        <ContextMenuSeparator />
+                        {GROUP_COLORS.map((c) => (
+                          <ContextMenuItem
+                            key={c.value}
+                            icon={Palette}
+                            label={c.name}
+                            onClick={() => onSetGroupColor(group.id, c.value)}
+                            showCheck={true}
+                            checked={group.color === c.value}
+                          />
+                        ))}
+                        <ContextMenuSeparator />
+                        <ContextMenuItem
+                          icon={Unlink}
+                          label="Unlink Group"
+                          onClick={() => onUnlinkGroup(group.id)}
+                        />
+                        <ContextMenuItem
+                          icon={X}
+                          label="Close Group"
+                          onClick={() => onCloseGroup(group.id)}
+                          variant="danger"
+                        />
+                      </ContextMenu>
+
+                      {/* Group tabs — animated collapse */}
+                      <div
+                        className={cn(
+                          'overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+                          group.collapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'space-y-0.5 mt-0.5',
+                            compact ? 'border-l-2 ml-[3px] pl-0' : 'border-l-2 ml-2 pl-1'
+                          )}
+                          style={{ borderColor: `${group.color}50` }}
+                        >
+                          {groupItems.map((gi) => (
+                            <DraggableTabItem
+                              key={gi.id}
+                              item={gi}
+                              renderItem={renderAppItem}
+                              isGroupTarget={groupingTargetId === gi.id}
+                              dropPosition={dropPosition[gi.id] ?? null}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )
+
+                  group.tabIds.forEach((tid) => renderedTabIds.add(tid))
+                } else if (!groupedTabIds.has(item.id)) {
+                  elements.push(
+                    <DraggableTabItem
+                      key={item.id}
+                      item={item}
+                      renderItem={renderAppItem}
+                      isGroupTarget={groupingTargetId === item.id}
+                      dropPosition={dropPosition[item.id] ?? null}
+                    />
+                  )
+                  renderedTabIds.add(item.id)
+                }
+              }
+
+              return elements
+            })()}
             </SortableContext>
+
+            {/* Drag overlay — floating copy of the dragged tab */}
+            <DragOverlay dropAnimation={{
+              duration: 200,
+              easing: 'cubic-bezier(0.2, 0, 0, 1)',
+            }}>
+              {dragActiveId ? (() => {
+                const item = allPlatformItems.find((i) => i.id === dragActiveId)
+                if (!item) return null
+                return (
+                  <div className="opacity-80 bg-white/10 rounded-md shadow-xl backdrop-blur-sm">
+                    {renderAppItem(item, true, false)}
+                  </div>
+                )
+              })() : null}
+            </DragOverlay>
           </DndContext>
         </div>
       )}
     </nav>
+    {/* Floating tab preview — rendered via portal to avoid tooltip/layout conflicts */}
+    {previewData && ReactDOM.createPortal(
+      <div
+        className="fixed z-[9999] pointer-events-none animate-in fade-in-0 zoom-in-95 duration-150"
+        style={{
+          left: compact ? 60 : 200,
+          top: Math.max(8, Math.min(previewData.top - 20, window.innerHeight - 280)),
+        }}
+      >
+        <div
+          className="w-[280px] rounded-xl overflow-hidden border border-white/15 shadow-2xl shadow-black/50"
+          style={{
+            background: 'rgba(30, 30, 30, 0.95)',
+            backdropFilter: 'blur(20px)',
+          }}
+        >
+          <div className="px-3 py-2.5">
+            <div className="text-[13px] font-medium text-gray-100 truncate">{previewData.title}</div>
+            <div className="text-[11px] text-gray-400 truncate mt-0.5">{previewData.url}</div>
+          </div>
+          {previewData.image ? (
+            <div className="border-t border-white/10">
+              <img src={previewData.image} alt="" className="w-full h-auto block" />
+            </div>
+          ) : (
+            <div className="border-t border-white/10 h-[160px] flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-gray-500 border-t-gray-300 rounded-full animate-spin" />
+            </div>
+          )}
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   )
 }

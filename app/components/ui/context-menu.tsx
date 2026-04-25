@@ -5,6 +5,7 @@ interface ContextMenuProps {
   children: ReactNode
   trigger: ReactNode
   side?: 'top' | 'right' | 'bottom' | 'left'
+  onOpenChange?: (open: boolean) => void
 }
 
 interface ContextMenuContextType {
@@ -14,8 +15,12 @@ interface ContextMenuContextType {
 
 const ContextMenuContext = createContext<ContextMenuContextType | undefined>(undefined)
 
-export function ContextMenu({ children, trigger, side = 'right' }: ContextMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function ContextMenu({ children, trigger, side = 'right', onOpenChange }: ContextMenuProps) {
+  const [isOpen, _setIsOpen] = useState(false)
+  const setIsOpen = (open: boolean) => {
+    _setIsOpen(open)
+    onOpenChange?.(open)
+  }
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const menuRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLDivElement>(null)

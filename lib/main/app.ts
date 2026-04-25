@@ -11,8 +11,21 @@ import { getCurrentShortcut } from '@/lib/main/modules/shortcuts'
 import { shortcutsEmitter } from '@/lib/main/modules/shortcuts-storage'
 import { downloadManager } from '@/lib/main/modules/download-manager'
 
-// Menu setup function
-function setupMenu(mainWindow: BrowserWindow) {
+// Send an IPC message to the currently focused window (safe across multi-window)
+function sendToFocusedWindow(channel: string, ...args: any[]) {
+  const win = BrowserWindow.getFocusedWindow()
+  if (win && !win.isDestroyed() && win.webContents && !win.webContents.isDestroyed()) {
+    win.webContents.send(channel, ...args)
+  }
+}
+
+let menuInitialized = false
+
+// Menu setup function — uses getFocusedWindow() so shortcuts always target the active window
+function setupMenu() {
+  if (menuInitialized) return
+  menuInitialized = true
+
   const craftMenu = async () => {
     const isMac = process.platform === 'darwin'
 
@@ -64,25 +77,34 @@ function setupMenu(mainWindow: BrowserWindow) {
         label: 'File',
         submenu: [
           {
+            label: 'New Window',
+            accelerator: 'CommandOrControl+N',
+            click: () => {
+              createAppWindow()
+            },
+          },
+          {
+            label: 'New Incognito Window',
+            accelerator: 'CommandOrControl+Shift+N',
+            click: () => {
+              createIncognitoWindow()
+            },
+          },
+          { type: 'separator' },
+          {
             label: 'Settings',
             accelerator: getCurrentShortcut('browser.openSettings'),
-            click: () => {
-              mainWindow.webContents.send('navigate-to-settings')
-            },
+            click: () => sendToFocusedWindow('navigate-to-settings'),
           },
           {
             label: 'Downloads',
             accelerator: getCurrentShortcut('browser.openDownloads'),
-            click: () => {
-              mainWindow.webContents.send('navigate-to-downloads')
-            },
+            click: () => sendToFocusedWindow('navigate-to-downloads'),
           },
           {
             label: 'History',
             accelerator: getCurrentShortcut('browser.openHistory'),
-            click: () => {
-              mainWindow.webContents.send('navigate-to-history')
-            },
+            click: () => sendToFocusedWindow('navigate-to-history'),
           },
           ...(isMac
             ? []
@@ -118,52 +140,43 @@ function setupMenu(mainWindow: BrowserWindow) {
           {
             label: 'Toggle Sidebar',
             accelerator: getCurrentShortcut('browser.toggleSidebar'),
-            click: () => {
-              mainWindow.webContents.send('toggle-sidebar')
-            },
+            click: () => sendToFocusedWindow('toggle-sidebar'),
           },
           {
             label: 'Toggle Command Palette',
             accelerator: getCurrentShortcut('browser.toggleCommandPalette'),
-            click: () => {
-              mainWindow.webContents.send('toggle-command-palette')
-            },
+            click: () => sendToFocusedWindow('toggle-command-palette'),
           },
           {
             label: 'Next Tab',
             accelerator: getCurrentShortcut('browser.nextTab'),
-            click: () => {
-              mainWindow.webContents.send('next-tab')
-            },
+            click: () => sendToFocusedWindow('next-tab'),
           },
           {
             label: 'Reopen Closed Tab',
             accelerator: getCurrentShortcut('browser.reopenClosedTab'),
-            click: () => {
-              mainWindow.webContents.send('reopen-closed-tab')
-            },
+            click: () => sendToFocusedWindow('reopen-closed-tab'),
           },
           { type: 'separator' },
           {
             label: 'Reload Platform',
             accelerator: getCurrentShortcut('platform.reload'),
-            click: () => {
-              mainWindow.webContents.send('reload-platform')
-            },
+            click: () => sendToFocusedWindow('reload-platform'),
           },
           {
             label: 'Force Reload Platform',
             accelerator: getCurrentShortcut('platform.forceReload'),
-            click: () => {
-              mainWindow.webContents.send('force-reload-platform')
-            },
+            click: () => sendToFocusedWindow('force-reload-platform'),
           },
           { type: 'separator' },
           {
             label: 'Toggle DevTools',
             accelerator: getCurrentShortcut('platform.toggleDevTools'),
             click: () => {
-              mainWindow.webContents.toggleDevTools()
+              const win = BrowserWindow.getFocusedWindow()
+              if (win && !win.isDestroyed() && win.webContents && !win.webContents.isDestroyed()) {
+                win.webContents.toggleDevTools()
+              }
             },
           },
           { type: 'separator' },
@@ -182,16 +195,12 @@ function setupMenu(mainWindow: BrowserWindow) {
           {
             label: 'Go Back',
             accelerator: getCurrentShortcut('navigation.goBack'),
-            click: () => {
-              mainWindow.webContents.send('go-back')
-            },
+            click: () => sendToFocusedWindow('go-back'),
           },
           {
             label: 'Go Forward',
             accelerator: getCurrentShortcut('navigation.goForward'),
-            click: () => {
-              mainWindow.webContents.send('go-forward')
-            },
+            click: () => sendToFocusedWindow('go-forward'),
           },
         ],
       },
@@ -203,9 +212,7 @@ function setupMenu(mainWindow: BrowserWindow) {
           {
             label: 'Close Platform',
             accelerator: getCurrentShortcut('platform.close'),
-            click: () => {
-              mainWindow.webContents.send('close-platform')
-            },
+            click: () => sendToFocusedWindow('close-platform'),
           },
         ],
       },
@@ -237,14 +244,39 @@ function setupMenu(mainWindow: BrowserWindow) {
   return craftMenu
 }
 
+// Find the parent BrowserWindow that owns a given WebContents (handles nested webview contents)
+function getOwnerWindow(contents: WebContents): BrowserWindow | null {
+  // Try direct lookup first
+  const direct = BrowserWindow.fromWebContents(contents)
+  if (direct) return direct
+
+  // For webview guest contents, walk up the host chain
+  const allWindows = BrowserWindow.getAllWindows()
+  for (const win of allWindows) {
+    if (win.isDestroyed()) continue
+    try {
+      if (win.webContents && !win.webContents.isDestroyed()) {
+        if (win.webContents.id === contents.id) return win
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Fallback: return the first non-destroyed window
+  return allWindows.find((w) => !w.isDestroyed()) || null
+}
+
 // Global flag to track if user confirmed quit with downloads
 let shouldQuitWithDownloads = false
 
-export function createAppWindow(): BrowserWindow {
-  // Register custom protocol for resources
+// Track whether global handlers have been registered (must only happen once)
+let ipcHandlersRegistered = false
+let webContentsHandlerRegistered = false
+
+export function createAppWindow(initialUrl?: string): BrowserWindow {
+  // Register custom protocol for resources (safe to call multiple times)
   registerResourcesProtocol()
 
-  // Create the main window.
+  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 700,
@@ -266,143 +298,131 @@ export function createAppWindow(): BrowserWindow {
     },
   })
 
-  // Register IPC events for the main window.
-  registerWindowHandlers(mainWindow)
-  registerAppHandlers(app, mainWindow)
-  registerConfigHandlers()
-
-  // Set main window for download manager
-  downloadManager.setMainWindow(mainWindow)
-
-  // Initialize download path from config (if saved) or use default
-  // This will be updated when config handlers are registered
-  const unifiedSession = session.fromPartition('persist:unified-session')
-
-  // --- User-Agent & Header Configuration ---
-  // Strip Electron/Vlinder identifiers from the user-agent so external sites
-  // (video players, streaming APIs) treat this as a standard Chrome browser.
-  // Without this, servers like vidfast.pro return 500 errors.
-  const defaultUA = app.userAgentFallback
-  const cleanUA = defaultUA
-    .replace(/\s*Vlinder\/\S+/gi, '')
-    .replace(/\s*Electron\/\S+/gi, '')
-    .replace(/\s*vlinder\/\S+/gi, '')
-  app.userAgentFallback = cleanUA
-  unifiedSession.setUserAgent(cleanUA)
-
-  // Set proper SEC-CH-UA client hints and handle Google accounts on the unified session
-  const chromiumVersion = process.versions.chrome.split('.')[0]
-  unifiedSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    details.requestHeaders['SEC-CH-UA'] =
-      `"Chromium";v="${chromiumVersion}", "Google Chrome";v="${chromiumVersion}", "Not-A.Brand";v="99"`
-    details.requestHeaders['SEC-CH-UA-MOBILE'] = '?0'
-    details.requestHeaders['SEC-CH-UA-PLATFORM'] =
-      process.platform === 'win32'
-        ? '"Windows"'
-        : process.platform === 'darwin'
-          ? '"macOS"'
-          : '"Linux"'
-
-    // Use Firefox UA for Google accounts to prevent sign-in blocking
-    // (same approach as the original min-master UASwitcher)
-    if (details.url.includes('accounts.google.com')) {
-      try {
-        const url = new URL(details.url)
-        if (url.hostname === 'accounts.google.com') {
-          const fxVersion =
-            91 + Math.floor((Date.now() - 1628553600000) / (4.1 * 7 * 24 * 60 * 60 * 1000))
-          const rootUA =
-            process.platform === 'win32'
-              ? `Mozilla/5.0 (Windows NT 10.0; WOW64; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
-              : process.platform === 'darwin'
-                ? `Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
-                : `Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
-          details.requestHeaders['User-Agent'] = rootUA
-        }
-      } catch {
-        // Ignore URL parsing errors
-      }
-    }
-
-    callback({ cancel: false, requestHeaders: details.requestHeaders })
-  })
-
-  // Grant permissions required for video playback and embedded players.
-  // Without this, Electron's default handler may deny media/DRM permissions
-  // causing players to fail silently or show errors.
-  unifiedSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-    const allowedPermissions = [
-      'media',
-      'mediaKeySystem',   // DRM / Encrypted Media Extensions (Widevine)
-      'geolocation',
-      'notifications',
-      'fullscreen',
-      'pointerLock',
-      'openExternal',
-      'clipboard-read',
-      'clipboard-sanitized-write',
-    ]
-    callback(allowedPermissions.includes(permission))
-  })
-
-  // Also handle synchronous permission checks (some APIs check before requesting)
-  unifiedSession.setPermissionCheckHandler((_webContents, permission) => {
-    const allowedPermissions = [
-      'media',
-      'mediaKeySystem',
-      'fullscreen',
-      'pointerLock',
-      'clipboard-read',
-      'clipboard-sanitized-write',
-    ]
-    return allowedPermissions.includes(permission)
-  })
-
-  // Load saved download path from config store
-  const initDownloadPath = async () => {
-    try {
-      const Store = await import('electron-store')
-      const ElectronStore = Store.default
-      const store = new ElectronStore({ name: 'vlinder-config' })
-      const savedPath = store.get('downloadPath', null) as string | null
-      if (savedPath) {
-        downloadManager.setDownloadPath(savedPath)
-      } else {
-        const defaultPath = app.getPath('downloads')
-        downloadManager.setDownloadPath(defaultPath)
-      }
-    } catch {
-      const defaultPath = app.getPath('downloads')
-      downloadManager.setDownloadPath(defaultPath)
-    }
-  }
-
-  initDownloadPath()
-
-  // Set up download handler for unified session (used by all webviews) - MUST be before webviews are created
-  unifiedSession.on('will-download', (event, downloadItem, webContents) => {
-    downloadManager.handleDownload(webContents, downloadItem)
-  })
-
   // Initialize background URLs tracking (shared with app-handler)
   if (!(global as any).__backgroundUrls) {
     ;(global as any).__backgroundUrls = new Set<string>()
   }
   const backgroundUrls = (global as any).__backgroundUrls as Set<string>
 
-  // Fast one-way IPC for marking background URLs (bypasses conveyor validation for speed)
-  ipcMain.on('mark-background-url-fast', (_event, url: string) => {
-    if (typeof url === 'string' && url) {
-      backgroundUrls.add(url)
-      // Clean up after 5 seconds
-      setTimeout(() => {
-        backgroundUrls.delete(url)
-      }, 5000)
-    }
-  })
+  // One-time global setup (IPC handlers, session config, web-contents-created)
+  if (!ipcHandlersRegistered) {
+    registerWindowHandlers(mainWindow)
+    registerAppHandlers(app, mainWindow)
+    registerConfigHandlers()
 
-  // Setup application menu
-  setupMenu(mainWindow)
+    // Set main window for download manager
+    downloadManager.setMainWindow(mainWindow)
+
+    const unifiedSession = session.fromPartition('persist:unified-session')
+
+    // --- User-Agent & Header Configuration ---
+    const defaultUA = app.userAgentFallback
+    const cleanUA = defaultUA
+      .replace(/\s*Vlinder\/\S+/gi, '')
+      .replace(/\s*Electron\/\S+/gi, '')
+      .replace(/\s*vlinder\/\S+/gi, '')
+    app.userAgentFallback = cleanUA
+    unifiedSession.setUserAgent(cleanUA)
+
+    const chromiumVersion = process.versions.chrome.split('.')[0]
+    unifiedSession.webRequest.onBeforeSendHeaders((details, callback) => {
+      details.requestHeaders['SEC-CH-UA'] =
+        `"Chromium";v="${chromiumVersion}", "Google Chrome";v="${chromiumVersion}", "Not-A.Brand";v="99"`
+      details.requestHeaders['SEC-CH-UA-MOBILE'] = '?0'
+      details.requestHeaders['SEC-CH-UA-PLATFORM'] =
+        process.platform === 'win32'
+          ? '"Windows"'
+          : process.platform === 'darwin'
+            ? '"macOS"'
+            : '"Linux"'
+
+      if (details.url.includes('accounts.google.com')) {
+        try {
+          const url = new URL(details.url)
+          if (url.hostname === 'accounts.google.com') {
+            const fxVersion =
+              91 + Math.floor((Date.now() - 1628553600000) / (4.1 * 7 * 24 * 60 * 60 * 1000))
+            const rootUA =
+              process.platform === 'win32'
+                ? `Mozilla/5.0 (Windows NT 10.0; WOW64; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
+                : process.platform === 'darwin'
+                  ? `Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
+                  : `Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:${fxVersion}.0) Gecko/20100101 Firefox/${fxVersion}.0`
+            details.requestHeaders['User-Agent'] = rootUA
+          }
+        } catch {
+          // Ignore URL parsing errors
+        }
+      }
+
+      callback({ cancel: false, requestHeaders: details.requestHeaders })
+    })
+
+    unifiedSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+      const allowedPermissions = [
+        'media',
+        'mediaKeySystem',
+        'geolocation',
+        'notifications',
+        'fullscreen',
+        'pointerLock',
+        'openExternal',
+        'clipboard-read',
+        'clipboard-sanitized-write',
+      ]
+      callback(allowedPermissions.includes(permission))
+    })
+
+    unifiedSession.setPermissionCheckHandler((_webContents, permission) => {
+      const allowedPermissions = [
+        'media',
+        'mediaKeySystem',
+        'fullscreen',
+        'pointerLock',
+        'clipboard-read',
+        'clipboard-sanitized-write',
+      ]
+      return allowedPermissions.includes(permission)
+    })
+
+    const initDownloadPath = async () => {
+      try {
+        const Store = await import('electron-store')
+        const ElectronStore = Store.default
+        const store = new ElectronStore({ name: 'vlinder-config' })
+        const savedPath = store.get('downloadPath', null) as string | null
+        if (savedPath) {
+          downloadManager.setDownloadPath(savedPath)
+        } else {
+          const defaultPath = app.getPath('downloads')
+          downloadManager.setDownloadPath(defaultPath)
+        }
+      } catch {
+        const defaultPath = app.getPath('downloads')
+        downloadManager.setDownloadPath(defaultPath)
+      }
+    }
+
+    initDownloadPath()
+
+    unifiedSession.on('will-download', (event, downloadItem, webContents) => {
+      downloadManager.handleDownload(webContents, downloadItem)
+    })
+
+    ipcMain.on('mark-background-url-fast', (_event, url: string) => {
+      if (typeof url === 'string' && url) {
+        backgroundUrls.add(url)
+        setTimeout(() => {
+          backgroundUrls.delete(url)
+        }, 5000)
+      }
+    })
+
+    ipcHandlersRegistered = true
+  }
+
+  // Setup global application menu (only once — uses getFocusedWindow for all actions)
+  setupMenu()
 
   // Handle window close event - prevent closing if downloads are active
   mainWindow.on('close', (event) => {
@@ -527,7 +547,9 @@ export function createAppWindow(): BrowserWindow {
     return false
   }
 
-  // Handle webview security and external links
+  // Handle webview security and external links (register only once globally)
+  if (!webContentsHandlerRegistered) {
+  webContentsHandlerRegistered = true
   app.on('web-contents-created', (_, contents) => {
     // Increase max listeners to prevent warnings from multiple event handlers
     contents.setMaxListeners(20)
@@ -546,17 +568,20 @@ export function createAppWindow(): BrowserWindow {
       // Prevent the default context menu from showing
       event.preventDefault()
 
-      // Send context menu event to renderer
-      mainWindow.webContents.send('webview-context-menu', {
-        x: params.x,
-        y: params.y,
-        selectionText: params.selectionText,
-        linkURL: params.linkURL,
-        srcURL: params.srcURL,
-        webContentsId: contents.id,
-        isEditable: params.isEditable,
-        inputFieldType: params.inputFieldType,
-      })
+      // Send context menu event to the correct parent window's renderer
+      const ownerWin = getOwnerWindow(contents)
+      if (ownerWin && !ownerWin.isDestroyed()) {
+        ownerWin.webContents.send('webview-context-menu', {
+          x: params.x,
+          y: params.y,
+          selectionText: params.selectionText,
+          linkURL: params.linkURL,
+          srcURL: params.srcURL,
+          webContentsId: contents.id,
+          isEditable: params.isEditable,
+          inputFieldType: params.inputFieldType,
+        })
+      }
     })
 
     // Handle external navigation in webviews
@@ -587,14 +612,17 @@ export function createAppWindow(): BrowserWindow {
             backgroundUrls.delete(navigationUrl)
           }
 
-          // This is an external link - send to renderer to create temporary app
+          // This is an external link - send to the correct parent window's renderer
           event.preventDefault()
           const eventName = isBackground ? 'external-link-navigation-background' : 'external-link-navigation'
-          mainWindow.webContents.send(eventName, {
-            url: navigationUrl,
-            currentUrl: currentUrl,
-            title: contents.getTitle(),
-          })
+          const navOwner = getOwnerWindow(contents)
+          if (navOwner && !navOwner.isDestroyed()) {
+            navOwner.webContents.send(eventName, {
+              url: navigationUrl,
+              currentUrl: currentUrl,
+              title: contents.getTitle(),
+            })
+          }
         }
       } catch (error) {
         // If URL parsing fails, allow navigation to continue
@@ -719,12 +747,15 @@ export function createAppWindow(): BrowserWindow {
         }
       }
 
-      // For regular links, create temporary app as before
-      mainWindow.webContents.send('external-link-navigation', {
-        url: details.url,
-        currentUrl: contents.getURL(),
-        title: '',
-      })
+      // For regular links, create temporary app in the correct parent window
+      const popupOwner = getOwnerWindow(contents)
+      if (popupOwner && !popupOwner.isDestroyed()) {
+        popupOwner.webContents.send('external-link-navigation', {
+          url: details.url,
+          currentUrl: contents.getURL(),
+          title: '',
+        })
+      }
       return { action: 'deny' }
     })
 
@@ -833,6 +864,7 @@ export function createAppWindow(): BrowserWindow {
         .catch(() => {})
     })
   })
+  } // end webContentsHandlerRegistered guard
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -842,5 +874,95 @@ export function createAppWindow(): BrowserWindow {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
+  // If opened with a specific URL, send it to the renderer once loaded
+  if (initialUrl) {
+    mainWindow.webContents.once('did-finish-load', () => {
+      setTimeout(() => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('external-link-navigation', {
+            url: initialUrl,
+            currentUrl: '',
+            title: '',
+          })
+        }
+      }, 500)
+    })
+  }
+
   return mainWindow
+}
+
+export function createIncognitoWindow(): BrowserWindow {
+  registerResourcesProtocol()
+
+  const partitionName = `incognito-${Date.now()}`
+  const incognitoSession = session.fromPartition(partitionName)
+
+  // Mirror essential session config from normal window
+  const defaultUA = app.userAgentFallback
+  incognitoSession.setUserAgent(defaultUA)
+
+  const chromiumVersion = process.versions.chrome.split('.')[0]
+  incognitoSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    details.requestHeaders['SEC-CH-UA'] =
+      `"Chromium";v="${chromiumVersion}", "Google Chrome";v="${chromiumVersion}", "Not-A.Brand";v="99"`
+    details.requestHeaders['SEC-CH-UA-MOBILE'] = '?0'
+    details.requestHeaders['SEC-CH-UA-PLATFORM'] =
+      process.platform === 'win32' ? '"Windows"' : process.platform === 'darwin' ? '"macOS"' : '"Linux"'
+    callback({ cancel: false, requestHeaders: details.requestHeaders })
+  })
+
+  incognitoSession.setPermissionRequestHandler((_wc, permission, cb) => {
+    const allowed = ['media', 'mediaKeySystem', 'geolocation', 'notifications', 'fullscreen', 'pointerLock', 'clipboard-read', 'clipboard-sanitized-write']
+    cb(allowed.includes(permission))
+  })
+
+  const win = new BrowserWindow({
+    width: 1200,
+    height: 700,
+    minWidth: 1000,
+    minHeight: 700,
+    show: false,
+    backgroundColor: '#00000000',
+    ...(process.platform === 'win32' ? { backgroundMaterial: 'acrylic' as const } : { transparent: true }),
+    icon: appIcon,
+    frame: false,
+    titleBarStyle: 'hiddenInset',
+    title: 'Vlinder (Incognito)',
+    maximizable: true,
+    resizable: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/preload.js'),
+      sandbox: false,
+      webviewTag: true,
+      session: incognitoSession,
+    },
+  })
+
+  setupMenu()
+
+  win.on('ready-to-show', () => {
+    win.show()
+    contentBlocker.initialize(incognitoSession).catch(() => {})
+  })
+
+  win.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  // Tell the renderer it's incognito after load
+  win.webContents.once('did-finish-load', () => {
+    if (!win.isDestroyed()) {
+      win.webContents.send('set-incognito', true, partitionName)
+    }
+  })
+
+  if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
+    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  } else {
+    win.loadFile(join(__dirname, '../renderer/index.html'))
+  }
+
+  return win
 }

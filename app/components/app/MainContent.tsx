@@ -3,6 +3,7 @@ import InitialPage from '@/app/components/views/InitialPage'
 import Settings from '@/app/components/views/Settings'
 import Downloads from '@/app/components/views/Downloads'
 import { AddressBar } from '@/app/components/ui/address-bar'
+import { X } from 'lucide-react'
 import { type Tab as Platform } from '@/app/types/tab'
 import { useMemo, memo } from 'react'
 
@@ -47,6 +48,8 @@ interface MainContentProps {
   canGoBack?: boolean
   canGoForward?: boolean
   updateTab?: (tabId: string, updater: Partial<Platform> | ((tab: Platform) => Partial<Platform>)) => void
+  splitTabId: string | null
+  onCloseSplitScreen: () => void
 }
 
 function MainContentComponent({
@@ -90,8 +93,12 @@ function MainContentComponent({
   canGoBack,
   canGoForward,
   updateTab,
+  splitTabId,
+  onCloseSplitScreen,
 }: MainContentProps) {
   const activeTab = useMemo(() => tabs.find((tab) => tab.id === activePlatform), [tabs, activePlatform])
+  const splitTab = useMemo(() => splitTabId ? tabs.find((t) => t.id === splitTabId) : null, [tabs, splitTabId])
+  const isSplitActive = !!splitTab && splitTab.url && splitTab.url !== 'about:blank'
   const isActiveNewTab = activeTab?.url === 'about:blank'
   const webviewTabs = useMemo(() => tabs.filter((tab) => tab.url && tab.url !== 'about:blank'), [tabs])
 
@@ -103,27 +110,75 @@ function MainContentComponent({
         background: 'var(--background, #1a1a1a)',
       }}
     >
-      {webviewTabs.map((platform) => (
-        <WebviewContainer
-          key={platform.id}
-          ref={(ref) => {
-            if (ref) {
-              webviewRefs.current[platform.id] = ref
-            } else {
-              delete webviewRefs.current[platform.id]
-            }
-          }}
-          platform={platform}
-          isActive={activePlatform === platform.id}
-          isMuted={mutedPlatforms[platform.id] ?? false}
-          isPinned={pinnedPlatforms[platform.id] ?? false}
-          reloadTrigger={reloadTrigger[platform.id] || 0}
-          onNotification={() => onNotification(platform.id)}
-          transparencyEnabled={transparencyEnabled}
-          loadingBarEnabled={loadingBarEnabled}
-          onTabUpdate={updateTab ? (updates) => updateTab(platform.id, updates) : undefined}
-        />
-      ))}
+      {isSplitActive ? (
+        <div className="absolute inset-0 flex">
+          <div className="relative h-full" style={{ width: '50%' }}>
+            {webviewTabs.map((platform) => (
+              <WebviewContainer
+                key={platform.id}
+                ref={(ref) => {
+                  if (ref) webviewRefs.current[platform.id] = ref
+                  else delete webviewRefs.current[platform.id]
+                }}
+                platform={platform}
+                isActive={activePlatform === platform.id}
+                isMuted={mutedPlatforms[platform.id] ?? false}
+                isPinned={pinnedPlatforms[platform.id] ?? false}
+                reloadTrigger={reloadTrigger[platform.id] || 0}
+                onNotification={() => onNotification(platform.id)}
+                transparencyEnabled={transparencyEnabled}
+                loadingBarEnabled={loadingBarEnabled}
+                onTabUpdate={updateTab ? (updates) => updateTab(platform.id, updates) : undefined}
+              />
+            ))}
+          </div>
+          <div className="w-px bg-white/10 flex-shrink-0" />
+          <div className="relative h-full" style={{ width: 'calc(50% - 1px)' }}>
+            <WebviewContainer
+              key={`split-${splitTab!.id}`}
+              ref={(ref) => {
+                if (ref) webviewRefs.current[`split-${splitTab!.id}`] = ref
+                else delete webviewRefs.current[`split-${splitTab!.id}`]
+              }}
+              platform={splitTab!}
+              isActive={true}
+              isMuted={mutedPlatforms[splitTab!.id] ?? false}
+              isPinned={pinnedPlatforms[splitTab!.id] ?? false}
+              reloadTrigger={reloadTrigger[splitTab!.id] || 0}
+              onNotification={() => onNotification(splitTab!.id)}
+              transparencyEnabled={transparencyEnabled}
+              loadingBarEnabled={loadingBarEnabled}
+              onTabUpdate={updateTab ? (updates) => updateTab(splitTab!.id, updates) : undefined}
+            />
+            <button
+              onClick={onCloseSplitScreen}
+              className="absolute top-2 right-2 z-50 p-1 rounded-md bg-black/60 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-150"
+              title="Close split screen"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        webviewTabs.map((platform) => (
+          <WebviewContainer
+            key={platform.id}
+            ref={(ref) => {
+              if (ref) webviewRefs.current[platform.id] = ref
+              else delete webviewRefs.current[platform.id]
+            }}
+            platform={platform}
+            isActive={activePlatform === platform.id}
+            isMuted={mutedPlatforms[platform.id] ?? false}
+            isPinned={pinnedPlatforms[platform.id] ?? false}
+            reloadTrigger={reloadTrigger[platform.id] || 0}
+            onNotification={() => onNotification(platform.id)}
+            transparencyEnabled={transparencyEnabled}
+            loadingBarEnabled={loadingBarEnabled}
+            onTabUpdate={updateTab ? (updates) => updateTab(platform.id, updates) : undefined}
+          />
+        ))
+      )}
 
       <InitialPage isActive={isActiveNewTab} onNavigate={onAddressBarNavigate} />
 

@@ -7,20 +7,18 @@
 
 import { Tab as Platform } from '@/app/types/tab'
 
-/**
- * Get the session partition for a platform
- * All platforms now share the same session partition for unified authentication
- *
- * @param platform - The platform configuration
- * @returns The session partition string
- *
- * @example
- * // All platforms now share the same session
- * getSessionPartition(youtubePlatform) // "persist:unified-session"
- * getSessionPartition(discordPlatform) // "persist:unified-session"
- */
+let _incognitoPartition: string | null = null
+
+export function setIncognitoPartition(partition: string | null) {
+  _incognitoPartition = partition
+}
+
+export function getIncognitoPartition(): string | null {
+  return _incognitoPartition
+}
+
 export function getSessionPartition(platform: Platform): string {
-  // All platforms share the same session partition for unified authentication
+  if (_incognitoPartition) return _incognitoPartition
   return 'persist:unified-session'
 }
 

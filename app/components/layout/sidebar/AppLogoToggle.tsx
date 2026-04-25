@@ -6,9 +6,10 @@ import AppLogo from '@/ui-ref/vlinder-butterply.png'
 interface AppLogoToggleProps {
   compact: boolean
   onToggleCompact: () => void
+  isIncognito?: boolean
 }
 
-export function AppLogoToggle({ compact, onToggleCompact }: AppLogoToggleProps) {
+export function AppLogoToggle({ compact, onToggleCompact, isIncognito }: AppLogoToggleProps) {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
@@ -32,6 +33,9 @@ export function AppLogoToggle({ compact, onToggleCompact }: AppLogoToggleProps) 
             'w-full h-full object-contain transition-all duration-500 ease-out',
             isHovered ? 'scale-110 brightness-110' : 'scale-100 brightness-100'
           )}
+          style={isIncognito ? {
+            filter: 'brightness(0) saturate(100%) invert(26%) sepia(98%) saturate(6000%) hue-rotate(355deg) brightness(95%) contrast(120%)',
+          } : undefined}
         />
       </div>
 

@@ -138,10 +138,7 @@ function makeAutofillScript(username: string, password: string): string {
 `
 }
 
-let mainWindowRef: BrowserWindow | null = null
-
-export function initPasswordCapture(mainWindow: BrowserWindow) {
-  mainWindowRef = mainWindow
+export function initPasswordCapture(_mainWindow?: BrowserWindow) {
 
   app.on('web-contents-created', (_, contents) => {
     if (contents.getType() !== 'webview') return
@@ -186,8 +183,6 @@ async function handleCapturedCredential(captured: {
   username: string
   password: string
 }) {
-  if (!mainWindowRef) return
-
   const origin = getOriginFromUrl(captured.url)
   if (!origin) return
 
@@ -201,12 +196,15 @@ async function handleCapturedCredential(captured: {
 
   const isUpdate = existing.some((c) => c.username === captured.username)
 
-  mainWindowRef.webContents.send('password-save-prompt', {
-    origin,
-    username: captured.username,
-    password: captured.password,
-    isUpdate,
-  })
+  const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows().find(w => !w.isDestroyed())
+  if (win && !win.isDestroyed() && win.webContents && !win.webContents.isDestroyed()) {
+    win.webContents.send('password-save-prompt', {
+      origin,
+      username: captured.username,
+      password: captured.password,
+      isUpdate,
+    })
+  }
 }
 
 async function tryAutofill(contents: WebContents, url: string) {

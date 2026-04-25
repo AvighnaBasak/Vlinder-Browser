@@ -486,6 +486,14 @@ export function AddressBar({
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault()
+              const file = e.dataTransfer?.files?.[0]
+              if (file && (file as any).path) {
+                onNavigate('file://' + (file as any).path.replace(/\\/g, '/'))
+              }
+            }}
             placeholder="Search or enter URL..."
             className={cn(
               'w-full pl-12 pr-12 py-3 text-sm font-medium',

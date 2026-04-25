@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useConveyor } from '@/app/hooks/use-conveyor'
-import { type Tab as Platform } from '@/app/types/tab'
+import { type Tab as Platform, type TabGroup } from '@/app/types/tab'
 import { createTemporaryTab } from '@/app/utils/createTemporaryTab'
+import { setIncognitoPartition as setGlobalIncognitoPartition } from '@/app/utils/session-helpers'
 import { Globe } from 'lucide-react'
 import { type WebviewContainerRef } from '@/app/components/views/WebviewContainer'
 import AppFrame from '@/app/components/app/AppFrame'
@@ -92,6 +93,41 @@ export default function App() {
   })
 
   const [reloadTrigger, setReloadTrigger] = useState<Record<string, number>>({})
+
+  // Incognito mode
+  const [isIncognito, setIsIncognito] = useState(false)
+  const [incognitoPartition, setIncognitoPartition] = useState<string | null>(null)
+
+  useEffect(() => {
+    const api = (window as any).electronAPI
+    if (api?.onSetIncognito) {
+      api.onSetIncognito((incognito: boolean, partition: string) => {
+        setIsIncognito(incognito)
+        setIncognitoPartition(partition)
+        setGlobalIncognitoPartition(incognito ? partition : null)
+      })
+    }
+  }, [])
+
+  // Split screen state
+  const [splitTabId, setSplitTabId] = useState<string | null>(null)
+
+  // Tab groups state
+  const [tabGroups, setTabGroups] = useState<TabGroup[]>(() => {
+    try {
+      const stored = localStorage.getItem('tab-groups')
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Persist tab groups
+  useEffect(() => {
+    try {
+      localStorage.setItem('tab-groups', JSON.stringify(tabGroups))
+    } catch { /* ignore */ }
+  }, [tabGroups])
 
   // Temporary apps state
   const [temporaryApps, setTemporaryApps] = useState<Platform[]>([])
@@ -412,6 +448,33 @@ export default function App() {
 
   // Webview title updates from main
   useWebviewTitleUpdates(setDynamicTitles)
+
+  // Handle drag-and-drop: navigate active webview to the dropped URL/file
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const url = (e as CustomEvent).detail?.url
+      if (!url) return
+
+      const activeTab = tabs.find((t) => t.id === activePlatform)
+      if (activeTab) {
+        const ref = webviewRefs.current[activeTab.id]
+        if (ref) {
+          const domain = getDomainName(url)
+          const favicon = buildFaviconUrl(domain)
+          if (!activeTab.url || activeTab.url === 'about:blank') {
+            updateTab(activeTab.id, {
+              url,
+              name: domain || activeTab.name,
+              logoUrl: favicon ?? activeTab.logoUrl,
+            })
+          }
+          ref.navigate(url)
+        }
+      }
+    }
+    window.addEventListener('app-drop-url', handler)
+    return () => window.removeEventListener('app-drop-url', handler)
+  }, [tabs, activePlatform, webviewRefs, updateTab])
 
   // Listen for navigate to downloads page
   useEffect(() => {
@@ -1386,6 +1449,97 @@ export default function App() {
     [handleCloseTab, pinnedTabs]
   )
 
+  // ── Split screen handlers ──
+  const handleOpenSplitScreen = useCallback((tabId: string) => {
+    if (tabId !== activePlatform) {
+      setSplitTabId(tabId)
+    }
+  }, [activePlatform])
+
+  const handleCloseSplitScreen = useCallback(() => {
+    setSplitTabId(null)
+  }, [])
+
+  // Close split when the split tab is closed
+  useEffect(() => {
+    if (splitTabId && !tabs.find((t) => t.id === splitTabId)) {
+      setSplitTabId(null)
+    }
+  }, [tabs, splitTabId])
+
+  // ── Tab group handlers ──
+  const handleCreateTabGroup = useCallback((tabIds: string[], name?: string) => {
+    const id = `group_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+    // Remove these tabs from any existing groups
+    setTabGroups((prev) => {
+      const cleaned = prev.map((g) => ({
+        ...g,
+        tabIds: g.tabIds.filter((tid) => !tabIds.includes(tid)),
+      })).filter((g) => g.tabIds.length > 0)
+      return [...cleaned, { id, name: name || 'New Group', color: '#3b82f6', tabIds, collapsed: false }]
+    })
+  }, [])
+
+  const handleRenameTabGroup = useCallback((groupId: string, name: string) => {
+    setTabGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, name } : g))
+  }, [])
+
+  const handleSetGroupColor = useCallback((groupId: string, color: string) => {
+    setTabGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, color } : g))
+  }, [])
+
+  const handleToggleGroupCollapsed = useCallback((groupId: string) => {
+    setTabGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, collapsed: !g.collapsed } : g))
+  }, [])
+
+  const handleAddToGroup = useCallback((groupId: string, tabId: string) => {
+    setTabGroups((prev) => {
+      // Remove from any other group first
+      const cleaned = prev.map((g) => ({
+        ...g,
+        tabIds: g.tabIds.filter((tid) => tid !== tabId),
+      }))
+      return cleaned.map((g) => {
+        if (g.id === groupId) {
+          return { ...g, tabIds: [...g.tabIds, tabId] }
+        }
+        return g
+      }).filter((g) => g.tabIds.length > 0)
+    })
+  }, [])
+
+  const handleRemoveFromGroup = useCallback((tabId: string) => {
+    setTabGroups((prev) =>
+      prev.map((g) => ({ ...g, tabIds: g.tabIds.filter((tid) => tid !== tabId) }))
+        .filter((g) => g.tabIds.length > 0)
+    )
+  }, [])
+
+  const handleUnlinkGroup = useCallback((groupId: string) => {
+    setTabGroups((prev) => prev.filter((g) => g.id !== groupId))
+  }, [])
+
+  const handleCloseGroup = useCallback((groupId: string) => {
+    const group = tabGroups.find((g) => g.id === groupId)
+    if (group) {
+      group.tabIds.forEach((tid) => handleCloseTab(tid))
+      setTabGroups((prev) => prev.filter((g) => g.id !== groupId))
+    }
+  }, [tabGroups, handleCloseTab])
+
+  // Clean up groups when tabs are removed
+  useEffect(() => {
+    const tabIds = new Set(tabs.map((t) => t.id))
+    setTabGroups((prev) => {
+      const cleaned = prev.map((g) => ({
+        ...g,
+        tabIds: g.tabIds.filter((tid) => tabIds.has(tid)),
+      })).filter((g) => g.tabIds.length > 0)
+      if (JSON.stringify(cleaned) !== JSON.stringify(prev)) return cleaned
+      return prev
+    })
+  }, [tabs])
+
   // IPC-driven menu actions
   useMenuActions({
     activeTabId: activePlatform,
@@ -1479,6 +1633,19 @@ export default function App() {
         onGoForward={handleGoForward}
         canGoBack={canGoBack}
         canGoForward={canGoForward}
+        splitTabId={splitTabId}
+        onOpenSplitScreen={handleOpenSplitScreen}
+        onCloseSplitScreen={handleCloseSplitScreen}
+        tabGroups={tabGroups}
+        onCreateTabGroup={handleCreateTabGroup}
+        onRenameTabGroup={handleRenameTabGroup}
+        onSetGroupColor={handleSetGroupColor}
+        onToggleGroupCollapsed={handleToggleGroupCollapsed}
+        onAddToGroup={handleAddToGroup}
+        onRemoveFromGroup={handleRemoveFromGroup}
+        onUnlinkGroup={handleUnlinkGroup}
+        onCloseGroup={handleCloseGroup}
+        isIncognito={isIncognito}
       />
       <CommandPalette
         isOpen={isCommandPaletteOpen}

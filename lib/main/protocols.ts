@@ -2,7 +2,11 @@ import { protocol, net } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 
+let registered = false
+
 export function registerResourcesProtocol() {
+  if (registered) return
+  registered = true
   protocol.handle('res', async (request) => {
     try {
       const url = new URL(request.url)

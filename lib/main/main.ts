@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, net } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
-import { createAppWindow } from './app'
+import { createAppWindow, createIncognitoWindow } from './app'
 import { registerShortcutsHandlers } from '@/lib/main/modules/shortcuts-handler'
 import { registerPasswordsHandlers } from '@/lib/main/modules/passwords'
 import { downloadManager } from '@/lib/main/modules/download-manager'
@@ -100,6 +100,16 @@ app.whenReady().then(async () => {
 
   // Create app window and store reference
   mainWindow = await createAppWindow()
+
+  // IPC handler: open a new window (Ctrl+N or "Open in New Window")
+  ipcMain.on('new-window', (_event, url?: string) => {
+    createAppWindow(url || undefined)
+  })
+
+  // IPC handler: open incognito window (Ctrl+Shift+N)
+  ipcMain.on('new-incognito-window', () => {
+    createIncognitoWindow()
+  })
 
   // Handle startup URL if app was launched with a URL
   const startupUrl = process.argv.slice(1).find((arg) => isValidOpenerUrl(arg))

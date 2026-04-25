@@ -1,7 +1,7 @@
 import { AppLayout } from '@/app/components/layout/AppLayout'
 import SidebarPane from '@/app/components/app/SidebarPane'
 import MainContent from '@/app/components/app/MainContent'
-import { type Tab as Platform } from '@/app/types/tab'
+import { type Tab as Platform, type TabGroup } from '@/app/types/tab'
 import { type WebviewContainerRef } from '@/app/components/views/WebviewContainer'
 // TabsBar removed; tabs are now in the sidebar
 
@@ -73,6 +73,21 @@ interface AppFrameProps {
   onCloseOtherTabs?: (id: string) => void
   onCloseTabsToRight?: (id: string) => void
   updateTab?: (tabId: string, updater: Partial<Platform> | ((tab: Platform) => Partial<Platform>)) => void
+  // split screen
+  splitTabId: string | null
+  onOpenSplitScreen: (tabId: string) => void
+  onCloseSplitScreen: () => void
+  // tab groups
+  tabGroups: TabGroup[]
+  onCreateTabGroup: (tabIds: string[], name?: string) => void
+  onRenameTabGroup: (groupId: string, name: string) => void
+  onSetGroupColor: (groupId: string, color: string) => void
+  onToggleGroupCollapsed: (groupId: string) => void
+  onAddToGroup: (groupId: string, tabId: string) => void
+  onRemoveFromGroup: (tabId: string) => void
+  onUnlinkGroup: (groupId: string) => void
+  onCloseGroup: (groupId: string) => void
+  isIncognito: boolean
 }
 
 export default function AppFrame(props: AppFrameProps) {
@@ -143,6 +158,19 @@ export default function AppFrame(props: AppFrameProps) {
     canGoBack,
     canGoForward,
     updateTab,
+    splitTabId,
+    onOpenSplitScreen,
+    onCloseSplitScreen,
+    tabGroups,
+    onCreateTabGroup,
+    onRenameTabGroup,
+    onSetGroupColor,
+    onToggleGroupCollapsed,
+    onAddToGroup,
+    onRemoveFromGroup,
+    onUnlinkGroup,
+    onCloseGroup,
+    isIncognito,
   } = props
 
   return (
@@ -186,6 +214,19 @@ export default function AppFrame(props: AppFrameProps) {
           onReorderPlatforms={onReorderPlatforms}
           sidebarPosition={sidebarPos}
           squarePinnedTabs={squarePinnedTabs}
+          webviewRefs={webviewRefs}
+          splitTabId={splitTabId}
+          onOpenSplitScreen={onOpenSplitScreen}
+          tabGroups={tabGroups}
+          onCreateTabGroup={onCreateTabGroup}
+          onRenameTabGroup={onRenameTabGroup}
+          onSetGroupColor={onSetGroupColor}
+          onToggleGroupCollapsed={onToggleGroupCollapsed}
+          onAddToGroup={onAddToGroup}
+          onRemoveFromGroup={onRemoveFromGroup}
+          onUnlinkGroup={onUnlinkGroup}
+          onCloseGroup={onCloseGroup}
+          isIncognito={isIncognito}
         />
 
         <AppLayout>
@@ -230,6 +271,8 @@ export default function AppFrame(props: AppFrameProps) {
             canGoBack={canGoBack}
             canGoForward={canGoForward}
             updateTab={updateTab}
+            splitTabId={splitTabId}
+            onCloseSplitScreen={onCloseSplitScreen}
           />
         </AppLayout>
       </div>

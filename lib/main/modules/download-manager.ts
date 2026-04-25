@@ -25,7 +25,6 @@ class DownloadManager {
   private downloads: Map<string, DownloadInfo> = new Map()
   private downloadPath: string = app.getPath('downloads')
   private activeDownloadsByUrl: Map<string, string> = new Map() // URL -> downloadId
-  private mainWindow: BrowserWindow | null = null
   private store: any = null
 
   constructor() {
@@ -44,8 +43,20 @@ class DownloadManager {
     return this.store
   }
 
-  setMainWindow(window: BrowserWindow) {
-    this.mainWindow = window
+  setMainWindow(_window: BrowserWindow) {
+    // No-op: we now broadcast to all windows dynamically
+  }
+
+  private getAnyWindow(): BrowserWindow | null {
+    return BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows().find(w => !w.isDestroyed()) || null
+  }
+
+  private broadcastToAll(channel: string, ...args: any[]) {
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed() && win.webContents && !win.webContents.isDestroyed()) {
+        try { win.webContents.send(channel, ...args) } catch { /* destroyed mid-iteration */ }
+      }
+    }
   }
 
   private async loadDownloadPath() {
@@ -159,7 +170,7 @@ class DownloadManager {
     const filename = downloadItem.getFilename()
     const savePath = join(this.downloadPath, filename)
 
-    if (!this.mainWindow) {
+    if (!this.getAnyWindow()) {
       return null
     }
 
@@ -206,10 +217,7 @@ class DownloadManager {
         }
         this.downloads.set(downloadId, updatedInfo)
 
-        webContents.send('download-updated', { ...updatedInfo })
-        if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-          this.mainWindow.webContents.send('download-updated', { ...updatedInfo })
-        }
+        this.broadcastToAll('download-updated', { ...updatedInfo })
       })
 
       downloadItem.on('done', (_event, state) => {
@@ -221,13 +229,11 @@ class DownloadManager {
         if (state === 'completed') {
           updatedInfo.state = 'completed'
           updatedInfo.endTime = Date.now()
-          if (this.mainWindow) {
-            this.mainWindow.webContents.send('download-completed-notification', {
-              filename: updatedInfo.filename,
-              path: updatedInfo.path,
-              downloadId: updatedInfo.id,
-            })
-          }
+          this.broadcastToAll('download-completed-notification', {
+            filename: updatedInfo.filename,
+            path: updatedInfo.path,
+            downloadId: updatedInfo.id,
+          })
         } else if (state === 'cancelled') {
           updatedInfo.state = 'cancelled'
           updatedInfo.endTime = Date.now()
@@ -245,16 +251,10 @@ class DownloadManager {
           this.persistDownloads()
         }
 
-        webContents.send('download-completed', { ...updatedInfo })
-        if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-          this.mainWindow.webContents.send('download-completed', { ...updatedInfo })
-        }
+        this.broadcastToAll('download-completed', { ...updatedInfo })
       })
 
-      webContents.send('download-started', { ...downloadInfo })
-      if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-        this.mainWindow.webContents.send('download-started', { ...downloadInfo })
-      }
+      this.broadcastToAll('download-started', { ...downloadInfo })
 
       return downloadId
     }
@@ -262,8 +262,9 @@ class DownloadManager {
     try {
       downloadItem.cancel()
 
+      const dlWindow = this.getAnyWindow()!
       const downloadId = await this.manager.download({
-        window: this.mainWindow,
+        window: dlWindow,
         url: url,
         directory: this.downloadPath,
         callbacks: {
@@ -272,11 +273,7 @@ class DownloadManager {
               const info = this.convertDownloadData(data)
               this.downloads.set(data.id, info)
               this.activeDownloadsByUrl.set(url, data.id)
-
-              webContents.send('download-started', { ...info })
-              if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-                this.mainWindow.webContents.send('download-started', { ...info })
-              }
+              this.broadcastToAll('download-started', { ...info })
             } catch {
               // Error in onDownloadStarted
             }
@@ -285,11 +282,7 @@ class DownloadManager {
             try {
               const info = this.convertDownloadData(data)
               this.downloads.set(data.id, info)
-
-              webContents.send('download-updated', { ...info })
-              if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-                this.mainWindow.webContents.send('download-updated', { ...info })
-              }
+              this.broadcastToAll('download-updated', { ...info })
             } catch {
               // Error in onDownloadProgress
             }
@@ -303,18 +296,12 @@ class DownloadManager {
               this.activeDownloadsByUrl.delete(url)
               this.persistDownloads()
 
-              if (this.mainWindow) {
-                this.mainWindow.webContents.send('download-completed-notification', {
-                  filename: info.filename,
-                  path: info.path,
-                  downloadId: info.id,
-                })
-              }
-
-              webContents.send('download-completed', { ...info })
-              if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-                this.mainWindow.webContents.send('download-completed', { ...info })
-              }
+              this.broadcastToAll('download-completed-notification', {
+                filename: info.filename,
+                path: info.path,
+                downloadId: info.id,
+              })
+              this.broadcastToAll('download-completed', { ...info })
             } catch {
               // Error in onDownloadCompleted
             }
@@ -327,11 +314,7 @@ class DownloadManager {
               this.downloads.set(data.id, info)
               this.activeDownloadsByUrl.delete(url)
               this.persistDownloads()
-
-              webContents.send('download-completed', { ...info })
-              if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-                this.mainWindow.webContents.send('download-completed', { ...info })
-              }
+              this.broadcastToAll('download-completed', { ...info })
             } catch {
               // Error in onDownloadCancelled
             }
@@ -345,11 +328,7 @@ class DownloadManager {
               this.downloads.set(data.id, info)
               this.activeDownloadsByUrl.delete(url)
               this.persistDownloads()
-
-              webContents.send('download-completed', { ...info })
-              if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-                this.mainWindow.webContents.send('download-completed', { ...info })
-              }
+              this.broadcastToAll('download-completed', { ...info })
             } catch {
               // Error in onDownloadInterrupted
             }
@@ -364,11 +343,7 @@ class DownloadManager {
                 this.downloads.set(data.id, info)
                 this.activeDownloadsByUrl.delete(url)
                 this.persistDownloads()
-
-                webContents.send('download-completed', { ...info })
-                if (this.mainWindow && this.mainWindow.webContents !== webContents) {
-                  this.mainWindow.webContents.send('download-completed', { ...info })
-                }
+                this.broadcastToAll('download-completed', { ...info })
               } catch {
                 // Error converting download data
               }
@@ -391,10 +366,7 @@ class DownloadManager {
         if (info) {
           const updatedInfo = { ...info, state: 'paused' as const }
           this.downloads.set(downloadId, updatedInfo)
-
-          if (this.mainWindow) {
-            this.mainWindow.webContents.send('download-updated', updatedInfo)
-          }
+          this.broadcastToAll('download-updated', updatedInfo)
         }
       }
       return restoreData
@@ -410,10 +382,7 @@ class DownloadManager {
       if (info) {
         const updatedInfo = { ...info, state: 'progressing' as const }
         this.downloads.set(downloadId, updatedInfo)
-
-        if (this.mainWindow) {
-          this.mainWindow.webContents.send('download-updated', updatedInfo)
-        }
+        this.broadcastToAll('download-updated', updatedInfo)
       }
       return true
     } catch {
@@ -441,18 +410,7 @@ class DownloadManager {
       this.activeDownloadsByUrl.delete(info.url)
       this.persistDownloads()
 
-      if (
-        this.mainWindow &&
-        !this.mainWindow.isDestroyed() &&
-        this.mainWindow.webContents &&
-        !this.mainWindow.webContents.isDestroyed()
-      ) {
-        try {
-          this.mainWindow.webContents.send('download-completed', { ...updatedInfo })
-        } catch {
-          // Window might be destroyed, ignore
-        }
-      }
+      this.broadcastToAll('download-completed', { ...updatedInfo })
       return true
     } catch {
       return false
@@ -481,20 +439,7 @@ class DownloadManager {
     const deleted = this.downloads.delete(downloadId)
     if (deleted) {
       this.persistDownloads()
-
-      // Notify renderer that download was removed
-      if (
-        this.mainWindow &&
-        !this.mainWindow.isDestroyed() &&
-        this.mainWindow.webContents &&
-        !this.mainWindow.webContents.isDestroyed()
-      ) {
-        try {
-          this.mainWindow.webContents.send('download-completed', { ...info, state: 'cancelled' as const })
-        } catch {
-          // Window might be destroyed, ignore
-        }
-      }
+      this.broadcastToAll('download-completed', { ...info, state: 'cancelled' as const })
     }
     return deleted
   }

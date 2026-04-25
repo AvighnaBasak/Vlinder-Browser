@@ -1,5 +1,7 @@
+import React from 'react'
 import { Sidebar } from '@/app/components/layout/Sidebar'
-import { type Tab as Platform } from '@/app/types/tab'
+import { type Tab as Platform, type TabGroup } from '@/app/types/tab'
+import type { WebviewContainerRef } from '@/app/components/views/WebviewContainer'
 
 interface SidebarPaneProps {
   activePlatform: string
@@ -38,6 +40,21 @@ interface SidebarPaneProps {
   onCopyTabLink?: (id: string) => Promise<void> | void
   onCloseOtherTabs?: (id: string) => void
   onCloseTabsToRight?: (id: string) => void
+  webviewRefs?: React.MutableRefObject<Record<string, WebviewContainerRef>>
+  // split screen
+  splitTabId: string | null
+  onOpenSplitScreen: (tabId: string) => void
+  // tab groups
+  tabGroups: TabGroup[]
+  onCreateTabGroup: (tabIds: string[], name?: string) => void
+  onRenameTabGroup: (groupId: string, name: string) => void
+  onSetGroupColor: (groupId: string, color: string) => void
+  onToggleGroupCollapsed: (groupId: string) => void
+  onAddToGroup: (groupId: string, tabId: string) => void
+  onRemoveFromGroup: (tabId: string) => void
+  onUnlinkGroup: (groupId: string) => void
+  onCloseGroup: (groupId: string) => void
+  isIncognito: boolean
 }
 
 export default function SidebarPane(props: SidebarPaneProps) {

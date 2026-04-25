@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, memo, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { AppLogoToggle, NavigationButtons, PlatformNavigation, SpecialItems } from './sidebar/index'
-import { type Tab as Platform } from '@/app/types/tab'
+import { type Tab as Platform, type TabGroup } from '@/app/types/tab'
+import type { WebviewContainerRef } from '@/app/components/views/WebviewContainer'
 
 interface SidebarProps {
   activePlatform: string
@@ -40,6 +41,21 @@ interface SidebarProps {
   onCopyTabLink?: (id: string) => Promise<void> | void
   onCloseOtherTabs?: (id: string) => void
   onCloseTabsToRight?: (id: string) => void
+  webviewRefs?: React.MutableRefObject<Record<string, WebviewContainerRef>>
+  // split screen
+  splitTabId: string | null
+  onOpenSplitScreen: (tabId: string) => void
+  // tab groups
+  tabGroups: TabGroup[]
+  onCreateTabGroup: (tabIds: string[], name?: string) => void
+  onRenameTabGroup: (groupId: string, name: string) => void
+  onSetGroupColor: (groupId: string, color: string) => void
+  onToggleGroupCollapsed: (groupId: string) => void
+  onAddToGroup: (groupId: string, tabId: string) => void
+  onRemoveFromGroup: (tabId: string) => void
+  onUnlinkGroup: (groupId: string) => void
+  onCloseGroup: (groupId: string) => void
+  isIncognito: boolean
 }
 
 type SidebarMode = 'expanded' | 'compact' | 'hidden'
@@ -80,6 +96,19 @@ function SidebarComponent({
   onCopyTabLink,
   onCloseOtherTabs,
   onCloseTabsToRight,
+  webviewRefs,
+  splitTabId,
+  onOpenSplitScreen,
+  tabGroups,
+  onCreateTabGroup,
+  onRenameTabGroup,
+  onSetGroupColor,
+  onToggleGroupCollapsed,
+  onAddToGroup,
+  onRemoveFromGroup,
+  onUnlinkGroup,
+  onCloseGroup,
+  isIncognito,
 }: SidebarProps) {
   // Initialize mode from localStorage immediately to prevent flash
   const [mode, setMode] = useState<SidebarMode>(() => {
@@ -333,7 +362,7 @@ function SidebarComponent({
           {/* Logo Row */}
           <div className={`flex items-center gap-1 w-full transition-all duration-300 ease-out ${compact ? 'justify-center' : 'justify-between pr-4'}`}>
             {/* App Logo Toggle */}
-            <AppLogoToggle compact={compact} onToggleCompact={handleToggleExpandedCompact} />
+            <AppLogoToggle compact={compact} onToggleCompact={handleToggleExpandedCompact} isIncognito={isIncognito} />
 
             {/* Navigation Buttons */}
             <NavigationButtons
@@ -385,6 +414,18 @@ function SidebarComponent({
         onCopyTabLink={onCopyTabLink}
         onCloseOtherTabs={onCloseOtherTabs}
         onCloseTabsToRight={onCloseTabsToRight}
+        webviewRefs={webviewRefs}
+        splitTabId={splitTabId}
+        onOpenSplitScreen={onOpenSplitScreen}
+        tabGroups={tabGroups}
+        onCreateTabGroup={onCreateTabGroup}
+        onRenameTabGroup={onRenameTabGroup}
+        onSetGroupColor={onSetGroupColor}
+        onToggleGroupCollapsed={onToggleGroupCollapsed}
+        onAddToGroup={onAddToGroup}
+        onRemoveFromGroup={onRemoveFromGroup}
+        onUnlinkGroup={onUnlinkGroup}
+        onCloseGroup={onCloseGroup}
       />
 
       {/* Bottom Special Items (Store & Settings) */}

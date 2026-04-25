@@ -87,6 +87,14 @@ if (process.contextIsolated) {
       getSearchSuggestions: async (query: string) => ipcRenderer.invoke('search:getSuggestions', query),
       // Fast one-way send for marking background URLs (bypasses validation for speed)
       markBackgroundUrl: (url: string) => ipcRenderer.send('mark-background-url-fast', url),
+      // Open a new browser window (optionally with a URL)
+      openNewWindow: (url?: string) => ipcRenderer.send('new-window', url),
+      // Open an incognito window
+      openIncognitoWindow: () => ipcRenderer.send('new-incognito-window'),
+      // Listen for incognito mode signal
+      onSetIncognito: (cb: (isIncognito: boolean, partition: string) => void) => {
+        ipcRenderer.on('set-incognito', (_, isIncognito, partition) => cb(isIncognito, partition))
+      },
       // Download event listeners
       onDownloadStarted: (callback: (data: any) => void) => {
         ipcRenderer.on('download-started', (_, data) => callback(data))
@@ -205,6 +213,14 @@ if (process.contextIsolated) {
     getSearchSuggestions: async (query: string) => ipcRenderer.invoke('search:getSuggestions', query),
     // Fast one-way send for marking background URLs (bypasses validation for speed)
     markBackgroundUrl: (url: string) => ipcRenderer.send('mark-background-url-fast', url),
+    // Open a new browser window (optionally with a URL)
+    openNewWindow: (url?: string) => ipcRenderer.send('new-window', url),
+    // Open an incognito window
+    openIncognitoWindow: () => ipcRenderer.send('new-incognito-window'),
+    // Listen for incognito mode signal
+    onSetIncognito: (cb: (isIncognito: boolean, partition: string) => void) => {
+      ipcRenderer.on('set-incognito', (_, isIncognito, partition) => cb(isIncognito, partition))
+    },
     // Download event listeners
     onDownloadStarted: (callback: (data: any) => void) => {
       ipcRenderer.on('download-started', (_, data) => callback(data))
