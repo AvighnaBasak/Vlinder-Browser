@@ -1047,3 +1047,11 @@ body {
   /* backdrop-filter: blur(4px); */
   /* -webkit-backdrop-filter: blur(4px); */
 }
+
+/* Glass theme - true translucent frosted glass effect */
+html[data-theme='transparent'],
+html[data-theme='transparent'] body,
+html[data-theme='transparent'] #app {
+  background: transparent !important;
+  background-color: transparent !important;
+}

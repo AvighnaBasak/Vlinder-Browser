@@ -22,6 +22,7 @@ import {
   Palette,
   Unlink,
   Layers,
+  QrCode,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -48,6 +49,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import AppLogo from '@/app/components/ui/logo'
+import { QRCodeDialog } from '@/app/components/ui/qr-code-dialog'
 
 interface NavItem {
   id: string
@@ -247,6 +249,7 @@ function PlatformNavigationComponent({
   } | null>(null)
   const previewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const previewTabIdRef = useRef<string | null>(null)
+  const [qrCodeData, setQrCodeData] = useState<{ url: string; title?: string } | null>(null)
   const contextMenuOpenRef = useRef(false)
   const tabsRef = useRef(tabs)
   tabsRef.current = tabs
@@ -814,6 +817,15 @@ function PlatformNavigationComponent({
           {/* Copy Link */}
           {onCopyTabLink && tabData && tabData.url && tabData.url !== 'about:blank' && (
             <ContextMenuItem icon={Link2} label="Copy Link" onClick={() => onCopyTabLink(item.id)} />
+          )}
+
+          {/* QR Code */}
+          {tabData && tabData.url && tabData.url !== 'about:blank' && (
+            <ContextMenuItem
+              icon={QrCode}
+              label="QR Code"
+              onClick={() => setQrCodeData({ url: tabData.url!, title: dynamicTitles[item.id] || tabData.name })}
+            />
           )}
 
           {/* Open in New Window */}
@@ -1471,6 +1483,11 @@ function PlatformNavigationComponent({
         </div>
       )}
     </nav>
+    {/* QR Code dialog */}
+    {qrCodeData && ReactDOM.createPortal(
+      <QRCodeDialog url={qrCodeData.url} title={qrCodeData.title} onClose={() => setQrCodeData(null)} />,
+      document.body
+    )}
     {/* Floating tab preview — rendered via portal to avoid tooltip/layout conflicts */}
     {previewData && ReactDOM.createPortal(
       <div

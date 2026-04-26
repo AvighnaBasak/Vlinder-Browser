@@ -46,7 +46,7 @@ ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>
     <ErrorBoundary>
       <WindowTopBarProvider>
-        <div className="relative h-screen bg-[#1a1a1a]">
+        <div className="relative h-screen" style={{ backgroundColor: 'var(--background, #1a1a1a)' }}>
           <WindowTopBar />
           <AppWithTopBar>
             <App />

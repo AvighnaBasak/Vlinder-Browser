@@ -5,7 +5,7 @@
 <h3 align="center">The Best Open-Source Electron Browser for Privacy and Performance</h3>
 
 <p align="center">
-  Vlinder is a free, open-source desktop web browser built entirely on <strong>Electron</strong>. It is the most feature-complete Electron-based browser available, shipping with a three-tier ad blocker, Tor network proxy, incognito mode, password manager, split screen, tab groups, and 7 customizable themes -- all built in, no extensions needed. Designed as a lightweight, low-memory alternative to Chrome, Brave, and Firefox for Windows, macOS, and Linux.
+  Vlinder is a free, open-source desktop web browser built entirely on <strong>Electron</strong>. It is the most feature-complete Electron-based browser available, shipping with a three-tier ad blocker, Tor network proxy, incognito mode, password manager, split screen, tab groups, tab QR code sharing, and 7 customizable themes -- all built in, no extensions needed. Designed as a lightweight, low-memory alternative to Chrome, Brave, and Firefox for Windows, macOS, and Linux.
 </p>
 
 <p align="center">
@@ -58,13 +58,14 @@ How does Vlinder compare to other browsers, including other Electron-based brows
 | Built-in Tor Proxy | Yes | No | Tor window | No | No | No |
 | Built-in Password Manager | OS Keychain | Yes (cloud) | Yes (cloud) | Yes (cloud) | No | No |
 | Tab Groups | Drag to group | Yes | Yes | No | No | No |
-| Split Screen | Native | No | No | No | No | No |
+| Split Screen | Native | Yes | No | No | No | No |
 | Incognito Mode | Ephemeral partition | Yes | Yes | Yes | No | No |
 | Multi-Window | Yes | Yes | Yes | Yes | Yes | Yes |
 | Transparency / Glass UI | Acrylic + Glass theme | No | No | No | No | No |
 | Custom Themes | 7 built-in | No | Limited | Limited | No | No |
 | Low Memory Footprint | Single process | No (multi-process) | No | No | Yes | No |
 | Google Login Support | Full (UA spoofing) | Native | Native | Native | Broken | Broken |
+| Tab QR Code Generator | Yes | No | No | No | No | No |
 | Customizable Shortcuts | Every shortcut | Limited | Limited | Yes | No | No |
 | No Telemetry | Zero | Heavy | Some | Some | Optional | No |
 | Extensions Required | None | Many | Some | Many | Some | N/A |
@@ -87,7 +88,8 @@ Vlinder v2 is a ground-up rewrite with a completely new UI, new architecture, an
 - **Dynamic Favicon Discovery** with automatic extraction from page metadata, Google's favicon service, and DuckDuckGo as a fallback.
 - **Custom Platform Installation** via the built-in App Store allowing any URL to be turned into a sidebar app.
 - **Temporary Apps** for external links that open as disposable tabs with the option to convert them into permanent sidebar apps.
-- **Context Menus** on every tab for reload, mute, pin, close, duplicate, copy link, open in split screen, and tab group management.
+- **Context Menus** on every tab for reload, mute, pin, close, duplicate, copy link, QR code, open in split screen, and tab group management.
+- **Tab QR Code Generator** via right-click context menu. Generates a scannable QR code for any tab's URL with options to copy the QR image to clipboard or download it as a PNG file.
 
 ### Tab Groups
 
