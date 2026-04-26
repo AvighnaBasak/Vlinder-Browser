@@ -131,6 +131,7 @@ function MainContentComponent({
                 onTabUpdate={updateTab ? (updates) => updateTab(platform.id, updates) : undefined}
               />
             ))}
+            <InitialPage isActive={isActiveNewTab} onNavigate={onAddressBarNavigate} />
           </div>
           <div className="w-px bg-white/10 flex-shrink-0" />
           <div className="relative h-full" style={{ width: 'calc(50% - 1px)' }}>
@@ -180,7 +181,7 @@ function MainContentComponent({
         ))
       )}
 
-      <InitialPage isActive={isActiveNewTab} onNavigate={onAddressBarNavigate} />
+      {!isSplitActive && <InitialPage isActive={isActiveNewTab} onNavigate={onAddressBarNavigate} />}
 
       <Settings
         isActive={activePlatform === 'settings'}

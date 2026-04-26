@@ -274,6 +274,7 @@ function PlatformNavigationComponent({
         if (previewTabIdRef.current !== tabId) return
         const tabData = tabsRef.current.find((t) => t.id === tabId)
         if (!tabData) return
+        if (!tabData.url || tabData.url === 'about:blank') return
 
         const title = (tabData as any).title || dynamicTitlesRef.current[tabId] || tabData.name || 'Untitled'
         let url = ''
@@ -739,7 +740,7 @@ function PlatformNavigationComponent({
                     {item.name}
                   </span>
                 </TooltipTrigger>
-                {item.name && item.name.length > 0 && (
+                {isActive && item.name && item.name.length > 0 && (
                   <TooltipContent side="right" className="backdrop-blur-light max-w-xs">
                     <p className="break-words">{item.name}</p>
                   </TooltipContent>
@@ -897,15 +898,17 @@ function PlatformNavigationComponent({
                 <ContextMenu trigger={button} onOpenChange={handleContextMenuOpenChange}>{menuContent}</ContextMenu>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" className="backdrop-blur-light">
-              <div className="flex items-center gap-2">
-                {item.name}
-                {showNotificationBadge && <NotificationBadge count={notifCount} variant="compact" />}
-                {isPinned && <Pin className="w-3 h-3 opacity-60" />}
-                {isMuted && <VolumeX className="w-3 h-3 opacity-60" />}
-                {isTemporaryApp && <ExternalLink className="w-3 h-3 opacity-60" />}
-              </div>
-            </TooltipContent>
+            {isActive && (
+              <TooltipContent side="right" className="backdrop-blur-light">
+                <div className="flex items-center gap-2">
+                  {item.name}
+                  {showNotificationBadge && <NotificationBadge count={notifCount} variant="compact" />}
+                  {isPinned && <Pin className="w-3 h-3 opacity-60" />}
+                  {isMuted && <VolumeX className="w-3 h-3 opacity-60" />}
+                  {isTemporaryApp && <ExternalLink className="w-3 h-3 opacity-60" />}
+                </div>
+              </TooltipContent>
+            )}
           </Tooltip>
         </TooltipProvider>
       ) : (

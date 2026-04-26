@@ -129,22 +129,22 @@ export function NewTabPage({ onNavigate }: NewTabPageProps) {
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center min-h-screen text-gray-300 p-4 md:p-8 transition-colors duration-300 select-none overflow-auto"
+    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-300 p-4 transition-colors duration-300 select-none overflow-auto"
       style={{ background: 'var(--background, #1a1a1a)' }}
     >
-      <div className="flex flex-col items-center justify-center w-full max-w-lg">
+      <div className="flex flex-col items-center justify-center w-full max-w-[min(90%,28rem)] px-2">
         {/* Vlinder Logo */}
-        <div className="animate-fade-in mb-10">
+        <div className="animate-fade-in mb-6">
           <img
             src={VlinderLogo}
             alt="Vlinder"
-            className="h-14 md:h-18 object-contain"
+            className="h-10 object-contain"
             style={{ filter: 'brightness(1.1)' }}
           />
         </div>
 
         {/* Glassmorphism Search Bar */}
-        <div className="w-full px-3 sm:px-0 relative mb-10" ref={searchRef}>
+        <div className="w-full relative mb-6" ref={searchRef}>
           <div className="relative">
             <input
               className={cn(
